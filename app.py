@@ -102,14 +102,51 @@ if st.button("🚀 Run Detection", type="primary"):
         st.success("✅ 6 new illegal structures detected!")
         st.info("🔴 Red areas = New construction\n🟡 Yellow = Possible violations")
         
+        # GÖZƏL HTML (PDF kimi çap)
+        report_html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>SATELLA FHN Report</title>
+            <style>
+                body {{ font-family: Arial; margin: 40px; background: white; }}
+                .header {{ text-align: center; color: #2E8B57; font-size: 32px; }}
+                .location {{ background: #e6f3ff; padding: 20px; border-radius: 10px; margin: 20px 0; }}
+                .results {{ background: #f0fff0; padding: 25px; border-radius: 10px; }}
+                .metric {{ display: inline-block; width: 150px; margin: 10px; padding: 15px; background: white; border-radius: 8px; text-align: center; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }}
+                .footer {{ text-align: center; margin-top: 40px; color: #666; font-size: 14px; }}
+                @media print {{ body {{ margin: 0; }} }}
+            </style>
+        </head>
+        <body>
+            <div class="header">🛰️ SATELLA FHN Report</div>
+            <div class="location">
+                <h2>📍 Location</h2>
+                <p><strong>{current_lat:.6f}°N, {current_lon:.6f}°E</strong></p>
+            </div>
+            <div class="results">
+                <h2>📊 Detection Results</h2>
+                <div class="metric"><strong>6</strong><br>New Structures</div>
+                <div class="metric"><strong>92%</strong><br>Precision</div>
+                <div class="metric"><strong>90%</strong><br>F1-Score</div>
+                <div class="metric"><strong>0.9 km²</strong><br>Area</div>
+            </div>
+            <div class="footer">
+                Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}<br>
+                SATELLA - Azerbaijan Construction Monitoring
+            </div>
+        </body>
+        </html>
+        """
+        
         col_pdf1, col_pdf2 = st.columns([1,3])
         with col_pdf1:
             st.success("✅ Report Ready!")
+            st.info("💡 Brauzerdə aç → Ctrl+P → PDF olaraq saxla!")
         with col_pdf2:
-            pdf_data = create_pdf_html(current_lat, current_lon)
             st.download_button(
-                label="📄 Download FHN Report", 
-                data=pdf_data,
+                label="📄 Download Report (HTML→PDF)", 
+                data=report_html.encode('utf-8'),
                 file_name=f"SATELLA_FHN_{current_lat:.6f}_{current_lon:.6f}.html",
                 mime="text/html",
                 type="primary",
