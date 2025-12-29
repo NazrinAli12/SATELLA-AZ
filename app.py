@@ -15,15 +15,27 @@ with col1:
     st.header("📍 Coordinates")
     lat = st.number_input("Latitude", value=40.3948, min_value=39.0, max_value=42.0, step=0.00001, format="%.6f")
     lon = st.number_input("Longitude", value=49.8493, min_value=44.0, max_value=51.0, step=0.00001, format="%.6f")
+    
+    # CACHE TƏMİZLE BUTTON
+    if st.button("🔄 MAP Yenilə", type="secondary"):
+        st.cache_data.clear()
+        st.rerun()
 
 with col2:
     st.header("🗺️ Interactive Map")
-    m = folium.Map(location=[lat, lon], zoom_start=16, tiles="OpenStreetMap")
-    folium.Marker([lat, lon], popup="Test Zone", tooltip="Analysis Area").add_to(m)
-    folium.Circle([lat, lon], radius=300, popup="300m Analysis Zone", 
-                  color="red", fill=True, fillOpacity=0.4).add_to(m)
+    # CACHE TEMIZ MAP
+    @st.cache_data(ttl=1)  # 1 saniyə cache
+    def create_map(lat, lon):
+        m = folium.Map(location=[lat, lon], zoom_start=17, tiles="OpenStreetMap")
+        folium.Marker([lat, lon], popup=f"Analiz: {lat:.6f}, {lon:.6f}", tooltip="Analysis Area").add_to(m)
+        folium.Circle([lat, lon], radius=300, popup="300m Analysis Zone", 
+                      color="red", fill=True, fillOpacity=0.4).add_to(m)
+        return m
+    
+    m = create_map(lat, lon)
     folium_static(m, width=650, height=450)
 
+# QALANI EYNİ...
 with col3:
     st.header("📊 Detection Results")
     st.metric("New Structures", 6)
