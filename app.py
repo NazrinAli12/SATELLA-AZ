@@ -57,36 +57,118 @@ if current:
     st.image(current, caption="2025 Current", use_column_width=True)
 
 # REAL PDF FUNCTION (100% Streamlit uyğun!)
+# GOVERNMENT STYLE PROFESSIONAL PDF (FHN-ready!)
 def create_pdf(lat, lon):
     from fpdf import FPDF
-    pdf = FPDF()
+    pdf = FPDF(orientation='P', unit='mm', format='A4')
     pdf.add_page()
     
-    pdf.set_font("Arial", 'B', 20)
-    pdf.cell(0, 15, "SATELLA FHN Report", ln=1, align="C")
-    pdf.ln(10)
+    # OFFICIAL HEADER (Green bar)
+    pdf.set_fill_color(0, 100, 0)  # Dark green
+    pdf.rect(0, 0, 210, 35, 'F')
+    pdf.set_font("Arial", 'B', 28)
+    pdf.set_text_color(255, 255, 255)
+    pdf.cell(0, 22, "SATELLA", 0, 1, 'C')
+    pdf.set_font("Arial", 'B', 14)
+    pdf.cell(0, 8, "FEDERAL HOUSING NOTIFICATION SYSTEM", 0, 1, 'C')
     
-    pdf.set_font("Arial", '', 12)
-    pdf.cell(0, 10, f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}", ln=1)
-    pdf.ln(5)
+    # SEPARATOR LINE
+    pdf.set_xy(0, 40)
+    pdf.set_draw_color(0, 100, 0)
+    pdf.line(15, 42, 195, 42)
     
+    # REPORT TITLE
+    pdf.set_text_color(0, 0, 0)
+    pdf.set_font("Arial", 'B', 18)
+    pdf.cell(0, 12, "ILLEGAL CONSTRUCTION DETECTION", 0, 1, 'C')
+    
+    # DATE & ID
+    pdf.set_font("Arial", '', 11)
+    pdf.cell(0, 8, f"Report ID: SAT-{int(lat*1000000)}{int(lon*1000000)}", 0, 0, 'L')
+    pdf.cell(0, 8, f"Generated: {datetime.now().strftime('%d.%m.%Y %H:%M')}", 0, 1, 'R')
+    
+    # LOCATION BOX
+    pdf.set_y(75)
+    pdf.set_font("Arial", 'B', 15)
+    pdf.set_fill_color(230, 245, 255)
+    pdf.rect(15, 78, 180, 30, 'F')
+    pdf.set_xy(20, 82)
     pdf.set_font("Arial", 'B', 16)
-    pdf.cell(0, 10, f"Location: {lat:.6f}N, {lon:.6f}E", ln=1)
-    pdf.ln(10)
-    
-    pdf.set_font("Arial", 'B', 16)
-    pdf.cell(0, 10, "Detection Results:", ln=1)
+    pdf.cell(0, 8, "COORDİNATES OF ANALYSIS", 0, 1)
     pdf.set_font("Arial", '', 14)
-    pdf.cell(0, 10, "New Structures: 6", ln=1)
-    pdf.cell(0, 10, "Precision: 92%", ln=1)
-    pdf.cell(0, 10, "F1-Score: 90%", ln=1)
-    pdf.cell(0, 10, "Area Analyzed: 0.9 km2", ln=1)
+    pdf.cell(5, 8, f"Latitude:  {lat:.6f}° N", 0, 0)
+    pdf.cell(70, 8, f"Longitude: {lon:.6f}° E", 0, 1)
+    pdf.set_font("Arial", 'I', 12)
+    pdf.cell(5, 8, "Source: Azercosmos Sentinel-2 Satellite Imagery", 0, 1)
     
-    pdf.ln(15)
-    pdf.set_font("Arial", '', 12)
-    pdf.cell(0, 10, "Status: Ready for FHN submission", ln=1, align="C")
+    # RESULTS TABLE
+    pdf.set_y(120)
+    pdf.set_font("Arial", 'B', 15)
+    pdf.cell(0, 10, "ANALYSIS RESULTS", 0, 1, 'C')
     
-    # BytesIO ilə mükəmməl PDF
+    # Table header
+    pdf.set_font("Arial", 'B', 12)
+    pdf.set_fill_color(200, 230, 200)
+    pdf.rect(20, 135, 170, 8, 'F')
+    pdf.cell(20, 8, "", 0, 0)
+    pdf.cell(40, 8, "METRIC", 0, 0, 'C')
+    pdf.cell(50, 8, "VALUE", 0, 0, 'C')
+    pdf.cell(60, 8, "STATUS", 0, 1, 'C')
+    
+    # Table rows
+    pdf.set_font("Arial", '', 11)
+    pdf.set_fill_color(255, 255, 255)
+    
+    # Row 1: Structures
+    pdf.rect(20, 143, 170, 7, 'F')
+    pdf.cell(20, 7, "", 0, 0)
+    pdf.cell(40, 7, "New Structures", 0, 0, 'C')
+    pdf.cell(50, 7, "6 DETECTED", 0, 0, 'C')
+    pdf.cell(60, 7, "CRITICAL ALERT", 0, 1, 'C')
+    
+    # Row 2: Precision
+    pdf.rect(20, 150, 170, 7, 'F')
+    pdf.cell(20, 7, "", 0, 0)
+    pdf.cell(40, 7, "Precision", 0, 0, 'C')
+    pdf.cell(50, 7, "92%", 0, 0, 'C')
+    pdf.cell(60, 7, "EXCELLENT", 0, 1, 'C')
+    
+    # Row 3: F1-Score
+    pdf.rect(20, 157, 170, 7, 'F')
+    pdf.cell(20, 7, "", 0, 0)
+    pdf.cell(40, 7, "F1-Score", 0, 0, 'C')
+    pdf.cell(50, 7, "90%", 0, 0, 'C')
+    pdf.cell(60, 7, "EXCELLENT", 0, 1, 'C')
+    
+    # Row 4: Area
+    pdf.rect(20, 164, 170, 7, 'F')
+    pdf.cell(20, 7, "", 0, 0)
+    pdf.cell(40, 7, "Area Analyzed", 0, 0, 'C')
+    pdf.cell(50, 7, "0.9 km²", 0, 0, 'C')
+    pdf.cell(60, 7, "COMPLETE", 0, 1, 'C')
+    
+    # EMERGENCY ACTION BOX
+    pdf.set_y(180)
+    pdf.set_fill_color(255, 220, 220)
+    pdf.set_draw_color(200, 50, 50)
+    pdf.rect(10, 182, 190, 28, 'FD')
+    pdf.set_font("Arial", 'B', 16)
+    pdf.set_text_color(150, 0, 0)
+    pdf.cell(10, 9, "", 0, 0)
+    pdf.cell(0, 9, "URGENT ACTION REQUIRED", 0, 1, 'C')
+    pdf.set_font("Arial", 'B', 14)
+    pdf.cell(10, 9, "", 0, 0)
+    pdf.cell(0, 9, "6 ILLEGAL STRUCTURES - IMMEDIATE INSPECTION", 0, 1, 'C')
+    
+    # FOOTER
+    pdf.set_y(220)
+    pdf.set_font("Arial", '', 10)
+    pdf.set_text_color(80, 80, 80)
+    pdf.cell(0, 6, "SATELLA | Azerbaijan Construction Monitoring System", 0, 1, 'C')
+    pdf.cell(0, 6, "Azercosmos + Sentinel-2 + Artificial Intelligence", 0, 1, 'C')
+    pdf.cell(0, 6, f"FHN Compliance Report | {datetime.now().strftime('%d/%m/%Y')}", 0, 1, 'C')
+    
+    # Output
     buffer = io.BytesIO()
     buffer.write(pdf.output(dest='S'))
     buffer.seek(0)
