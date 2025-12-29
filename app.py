@@ -13,11 +13,11 @@ col1, col2, col3 = st.columns([1, 2, 1])
 
 with col1:
     st.header("📍 Coordinates")
-    lat = st.number_input("Latitude (40-41°)", value=40.409, step=0.001)
-    lon = st.number_input("Longitude (48-50°)", value=49.867, step=0.001)
+    lat = st.number_input("Latitude", value=40.3958, min_value=39.0, max_value=42.0, step=0.0001, format="%.6f")
+    lon = st.number_input("Longitude", value=49.8331, min_value=44.0, max_value=51.0, step=0.0001, format="%.6f")
     
-    if st.button("🔍 Zoom to Area", type="secondary"):
-        st.success(f"📍 Zoomed to {lat}°N, {lon}°E - Analysis ready!")
+    if st.button("🔍 Zoom to Map", type="secondary"):
+        st.success(f"📍 {lat}°N, {lon}°E - Medical University analysis ready!")
 
 with col2:
     st.header("🗺️ Interactive Map")
