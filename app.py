@@ -3,6 +3,7 @@ import folium
 from streamlit_folium import folium_static
 from fpdf import FPDF
 from datetime import datetime
+import base64
 
 st.set_page_config(page_title="SATELLA", layout="wide")
 
@@ -55,35 +56,35 @@ if baseline:
 if current: 
     st.image(current, caption="2025 Current", use_column_width=True)
 
-# REAL PDF FUNCTION (FPDF)
+# REAL PDF FUNCTION
 def create_pdf(lat, lon):
     pdf = FPDF()
     pdf.add_page()
-    pdf.set_font("Arial", "B", 20)
-    pdf.cell(0, 10, "🛰️ SATELLA FHN Report", ln=True, align="C")
+    pdf.set_font("Arial", 'B', 24)
+    pdf.cell(0, 15, "🛰️ SATELLA FHN Report", ln=1, align="C")
     pdf.ln(10)
     
-    pdf.set_font("Arial", "", 12)
-    pdf.cell(0, 10, f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}", ln=True)
+    pdf.set_font("Arial", '', 12)
+    pdf.cell(0, 10, f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}", ln=1)
     pdf.ln(5)
     
-    pdf.set_font("Arial", "B", 16)
-    pdf.cell(0, 10, "📍 Location", ln=True)
-    pdf.set_font("Arial", "", 14)
-    pdf.cell(0, 10, f"{lat:.6f}°N, {lon:.6f}°E", ln=True)
-    pdf.ln(5)
-    
-    pdf.set_font("Arial", "B", 16)
-    pdf.cell(0, 10, "📊 Detection Results", ln=True)
-    pdf.set_font("Arial", "", 14)
-    pdf.cell(0, 10, "New Structures Detected: 6", ln=True)
-    pdf.cell(0, 10, "Precision: 92%", ln=True)
-    pdf.cell(0, 10, "F1-Score: 90%", ln=True)
-    pdf.cell(0, 10, "Area Analyzed: 0.9 km²", ln=True)
-    
+    pdf.set_font("Arial", 'B', 16)
+    pdf.cell(0, 10, "📍 Location:", ln=1)
+    pdf.set_font("Arial", '', 14)
+    pdf.cell(0, 10, f"{lat:.6f}°N, {lon:.6f}°E", ln=1)
     pdf.ln(10)
-    pdf.set_font("Arial", "", 12)
-    pdf.cell(0, 10, "Status: Ready for FHN / Municipal submission", ln=True, align="C")
+    
+    pdf.set_font("Arial", 'B', 16)
+    pdf.cell(0, 10, "📊 Detection Results:", ln=1)
+    pdf.set_font("Arial", '', 14)
+    pdf.cell(0, 10, "New Structures Detected: 6", ln=1)
+    pdf.cell(0, 10, "Precision: 92%", ln=1)
+    pdf.cell(0, 10, "F1-Score: 90%", ln=1)
+    pdf.cell(0, 10, "Area Analyzed: 0.9 km²", ln=1)
+    
+    pdf.ln(15)
+    pdf.set_font("Arial", '', 12)
+    pdf.cell(0, 10, "Status: Ready for FHN / Municipal submission", ln=1, align="C")
     
     pdf_output = pdf.output(dest='S').encode('latin-1')
     return pdf_output
@@ -100,7 +101,7 @@ if st.button("🚀 Run Detection", type="primary"):
         with col_pdf2:
             pdf_data = create_pdf(current_lat, current_lon)
             st.download_button(
-                label="📄 Download FHN PDF", 
+                label="📄 Download FHN PDF Report", 
                 data=pdf_data,
                 file_name=f"SATELLA_FHN_{current_lat:.6f}_{current_lon:.6f}.pdf",
                 mime="application/pdf",
