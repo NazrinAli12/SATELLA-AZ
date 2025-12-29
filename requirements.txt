@@ -3,4 +3,3 @@ streamlit-folium
 folium
 Pillow
 numpy
-fpdf2==2.7.6
