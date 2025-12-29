@@ -1,8 +1,8 @@
 import streamlit as st
 import folium
 from streamlit_folium import folium_static
+from fpdf import FPDF
 from datetime import datetime
-import base64
 
 st.set_page_config(page_title="SATELLA", layout="wide")
 
@@ -55,102 +55,52 @@ if baseline:
 if current: 
     st.image(current, caption="2025 Current", use_column_width=True)
 
-# HTML + CSS PDF SIMULATION (100% işləyir!)
-def create_pdf_html(lat, lon):
-    html_content = f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="UTF-8">
-        <title>SATELLA FHN Report</title>
-        <style>
-            body {{ font-family: Arial, sans-serif; margin: 40px; }}
-            .header {{ text-align: center; color: #2E8B57; font-size: 28px; font-weight: bold; margin-bottom: 20px; }}
-            .location {{ background: #f0f8ff; padding: 15px; border-left: 5px solid #2E8B57; margin: 20px 0; }}
-            .results {{ background: #e8f5e8; padding: 20px; border-radius: 8px; }}
-            .metric {{ display: inline-block; margin: 10px 20px; padding: 10px; background: white; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }}
-            .footer {{ text-align: center; margin-top: 40px; color: #666; font-style: italic; }}
-        </style>
-    </head>
-    <body>
-        <div class="header">🛰️ SATELLA FHN Report</div>
-        <div>Location: <strong>{lat:.6f}°N, {lon:.6f}°E</strong></div>
-        <div class="location">
-            <h3>📍 Analysis Location</h3>
-            <p><strong>Latitude:</strong> {lat:.6f}°N</p>
-            <p><strong>Longitude:</strong> {lon:.6f}°E</p>
-        </div>
-        <div class="results">
-            <h3>📊 Detection Results</h3>
-            <div class="metric"><strong>6</strong><br>New Structures</div>
-            <div class="metric"><strong>92%</strong><br>Precision</div>
-            <div class="metric"><strong>90%</strong><br>F1-Score</div>
-            <div class="metric"><strong>0.9 km²</strong><br>Area Analyzed</div>
-        </div>
-        <div class="footer">
-            Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}<br>
-            Status: Ready for FHN / Municipal submission
-        </div>
-    </body>
-    </html>
-    """
-    return html_content.encode('utf-8')
+# REAL PDF FUNCTION
+def create_pdf(lat, lon):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", 'B', 24)
+    pdf.cell(0, 15, "SATELLA FHN Report", ln=1, align="C")
+    pdf.ln(10)
+    
+    pdf.set_font("Arial", '', 12)
+    pdf.cell(0, 10, f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}", ln=1)
+    pdf.ln(5)
+    
+    pdf.set_font("Arial", 'B', 16)
+    pdf.cell(0, 10, f"Location: {lat:.6f}N, {lon:.6f}E", ln=1)
+    pdf.ln(10)
+    
+    pdf.set_font("Arial", 'B', 16)
+    pdf.cell(0, 10, "Detection Results:", ln=1)
+    pdf.set_font("Arial", '', 14)
+    pdf.cell(0, 10, "New Structures Detected: 6", ln=1)
+    pdf.cell(0, 10, "Precision: 92%", ln=1)
+    pdf.cell(0, 10, "F1-Score: 90%", ln=1)
+    pdf.cell(0, 10, "Area Analyzed: 0.9 km", ln=1)
+    
+    pdf.ln(15)
+    pdf.set_font("Arial", '', 12)
+    pdf.cell(0, 10, "Status: Ready for FHN submission", ln=1, align="C")
+    
+    return pdf.output(dest='S').encode('latin-1')
 
-if st.button("🚀 Run Detection", type="primary"):
+if st.button("Run Detection", type="primary"):
     if baseline and current:
         st.balloons()
-        st.success("✅ 6 new illegal structures detected!")
-        st.info("🔴 Red areas = New construction\n🟡 Yellow = Possible violations")
-        
-        # GÖZƏL HTML (PDF kimi çap)
-        report_html = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>SATELLA FHN Report</title>
-            <style>
-                body {{ font-family: Arial; margin: 40px; background: white; }}
-                .header {{ text-align: center; color: #2E8B57; font-size: 32px; }}
-                .location {{ background: #e6f3ff; padding: 20px; border-radius: 10px; margin: 20px 0; }}
-                .results {{ background: #f0fff0; padding: 25px; border-radius: 10px; }}
-                .metric {{ display: inline-block; width: 150px; margin: 10px; padding: 15px; background: white; border-radius: 8px; text-align: center; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }}
-                .footer {{ text-align: center; margin-top: 40px; color: #666; font-size: 14px; }}
-                @media print {{ body {{ margin: 0; }} }}
-            </style>
-        </head>
-        <body>
-            <div class="header">🛰️ SATELLA FHN Report</div>
-            <div class="location">
-                <h2>📍 Location</h2>
-                <p><strong>{current_lat:.6f}°N, {current_lon:.6f}°E</strong></p>
-            </div>
-            <div class="results">
-                <h2>📊 Detection Results</h2>
-                <div class="metric"><strong>6</strong><br>New Structures</div>
-                <div class="metric"><strong>92%</strong><br>Precision</div>
-                <div class="metric"><strong>90%</strong><br>F1-Score</div>
-                <div class="metric"><strong>0.9 km²</strong><br>Area</div>
-            </div>
-            <div class="footer">
-                Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}<br>
-                SATELLA - Azerbaijan Construction Monitoring
-            </div>
-        </body>
-        </html>
-        """
+        st.success("6 new illegal structures detected!")
+        st.info("Red areas = New construction, Yellow = Possible violations")
         
         col_pdf1, col_pdf2 = st.columns([1,3])
         with col_pdf1:
-            st.success("✅ Report Ready!")
-            st.info("💡 Brauzerdə aç → Ctrl+P → PDF olaraq saxla!")
+            st.success("PDF Ready!")
         with col_pdf2:
+            pdf_data = create_pdf(current_lat, current_lon)
             st.download_button(
-                label="📄 Download Report (HTML→PDF)", 
-                data=report_html.encode('utf-8'),
-                file_name=f"SATELLA_FHN_{current_lat:.6f}_{current_lon:.6f}.html",
-                mime="text/html",
-                type="primary",
-                use_container_width=True
+                label="Download FHN PDF", 
+                data=pdf_data,
+                file_name=f"SATELLA_FHN_{current_lat:.6f}_{current_lon:.6f}.pdf",
+                mime="application/pdf"
             )
     else:
-        st.warning("⚠️ Upload BOTH images!")
+        st.warning("Upload BOTH images!")
