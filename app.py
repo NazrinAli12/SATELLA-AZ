@@ -64,7 +64,7 @@ def create_pdf(lat, lon):
     pdf.add_page()
     
     # OFFICIAL HEADER (Green bar)
-    pdf.set_fill_color(0, 100, 0)  # Dark green
+    pdf.set_fill_color(0, 100, 0)
     pdf.rect(0, 0, 210, 35, 'F')
     pdf.set_font("Arial", 'B', 28)
     pdf.set_text_color(255, 255, 255)
@@ -87,17 +87,17 @@ def create_pdf(lat, lon):
     pdf.cell(0, 8, f"Report ID: SAT-{int(lat*1000000)}{int(lon*1000000)}", 0, 0, 'L')
     pdf.cell(0, 8, f"Generated: {datetime.now().strftime('%d.%m.%Y %H:%M')}", 0, 1, 'R')
     
-    # LOCATION BOX
+    # LOCATION BOX (ASCII ONLY!)
     pdf.set_y(75)
     pdf.set_font("Arial", 'B', 15)
     pdf.set_fill_color(230, 245, 255)
     pdf.rect(15, 78, 180, 30, 'F')
     pdf.set_xy(20, 82)
     pdf.set_font("Arial", 'B', 16)
-    pdf.cell(0, 8, "COORDİNATES OF ANALYSIS", 0, 1)
+    pdf.cell(0, 8, "COORDINATES OF ANALYSIS", 0, 1)  # I duzeltdi!
     pdf.set_font("Arial", '', 14)
-    pdf.cell(5, 8, f"Latitude:  {lat:.6f}° N", 0, 0)
-    pdf.cell(70, 8, f"Longitude: {lon:.6f}° E", 0, 1)
+    pdf.cell(5, 8, f"Latitude:  {lat:.6f} N", 0, 0)
+    pdf.cell(70, 8, f"Longitude: {lon:.6f} E", 0, 1)
     pdf.set_font("Arial", 'I', 12)
     pdf.cell(5, 8, "Source: Azercosmos Sentinel-2 Satellite Imagery", 0, 1)
     
@@ -115,39 +115,35 @@ def create_pdf(lat, lon):
     pdf.cell(50, 8, "VALUE", 0, 0, 'C')
     pdf.cell(60, 8, "STATUS", 0, 1, 'C')
     
-    # Table rows
+    # Table rows (ASCII ONLY!)
     pdf.set_font("Arial", '', 11)
     pdf.set_fill_color(255, 255, 255)
     
-    # Row 1: Structures
     pdf.rect(20, 143, 170, 7, 'F')
     pdf.cell(20, 7, "", 0, 0)
     pdf.cell(40, 7, "New Structures", 0, 0, 'C')
     pdf.cell(50, 7, "6 DETECTED", 0, 0, 'C')
     pdf.cell(60, 7, "CRITICAL ALERT", 0, 1, 'C')
     
-    # Row 2: Precision
     pdf.rect(20, 150, 170, 7, 'F')
     pdf.cell(20, 7, "", 0, 0)
     pdf.cell(40, 7, "Precision", 0, 0, 'C')
     pdf.cell(50, 7, "92%", 0, 0, 'C')
     pdf.cell(60, 7, "EXCELLENT", 0, 1, 'C')
     
-    # Row 3: F1-Score
     pdf.rect(20, 157, 170, 7, 'F')
     pdf.cell(20, 7, "", 0, 0)
     pdf.cell(40, 7, "F1-Score", 0, 0, 'C')
     pdf.cell(50, 7, "90%", 0, 0, 'C')
     pdf.cell(60, 7, "EXCELLENT", 0, 1, 'C')
     
-    # Row 4: Area
     pdf.rect(20, 164, 170, 7, 'F')
     pdf.cell(20, 7, "", 0, 0)
     pdf.cell(40, 7, "Area Analyzed", 0, 0, 'C')
-    pdf.cell(50, 7, "0.9 km²", 0, 0, 'C')
+    pdf.cell(50, 7, "0.9 km2", 0, 0, 'C')
     pdf.cell(60, 7, "COMPLETE", 0, 1, 'C')
     
-    # EMERGENCY ACTION BOX
+    # EMERGENCY ACTION BOX (ASCII ONLY!)
     pdf.set_y(180)
     pdf.set_fill_color(255, 220, 220)
     pdf.set_draw_color(200, 50, 50)
