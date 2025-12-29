@@ -1,0 +1,7 @@
+{
+  "name": "SATELLA - Azerbaijan Construction Monitoring",
+  "description": "Satellite-based illegal building detection platform for Azerbaijan using Gemini Vision AI and Sentinel-2/Azercosmos data integration.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
