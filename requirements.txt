@@ -1,4 +1,6 @@
+streamlit
 streamlit-folium
+folium
 Pillow
 numpy
-reportlab==4.0.9
+fpdf2
