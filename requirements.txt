@@ -1,6 +1,4 @@
-streamlit
 streamlit-folium
-folium
-pillow
+Pillow
 numpy
-reportlab
+reportlab==4.0.9
