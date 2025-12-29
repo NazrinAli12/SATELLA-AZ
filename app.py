@@ -55,29 +55,23 @@ if baseline:
 if current: 
     st.image(current, caption="2025 Current", use_column_width=True)
 
-# REAL PDF FUNCTION (DÜZELDİLMİŞ - NO ENCODE!)
+# PERFECT PDF FUNCTION (NO ENCODE ERROR!)
 def create_pdf(lat, lon):
     pdf = FPDF()
     pdf.add_page()
     
-    # Header
     pdf.set_font("Arial", 'B', 20)
     pdf.cell(0, 15, "SATELLA FHN Report", ln=1, align="C")
     pdf.ln(10)
     
-    # Date
     pdf.set_font("Arial", '', 12)
     pdf.cell(0, 10, f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}", ln=1)
     pdf.ln(5)
     
-    # Location
     pdf.set_font("Arial", 'B', 16)
-    pdf.cell(0, 10, "Location:", ln=1)
-    pdf.set_font("Arial", '', 14)
-    pdf.cell(0, 10, f"{lat:.6f}N {lon:.6f}E", ln=1)
+    pdf.cell(0, 10, f"Location: {lat:.6f}N {lon:.6f}E", ln=1)
     pdf.ln(10)
     
-    # Results
     pdf.set_font("Arial", 'B', 16)
     pdf.cell(0, 10, "Detection Results:", ln=1)
     pdf.set_font("Arial", '', 14)
@@ -86,12 +80,11 @@ def create_pdf(lat, lon):
     pdf.cell(0, 10, "F1-Score: 90%", ln=1)
     pdf.cell(0, 10, "Area Analyzed: 0.9 km2", ln=1)
     
-    # Footer
     pdf.ln(15)
     pdf.set_font("Arial", '', 12)
     pdf.cell(0, 10, "Status: Ready for FHN submission", ln=1, align="C")
     
-    # CRITICAL FIX: NO .encode() - direct bytes!
+    # THIS IS THE FIX - NO ENCODE!
     return pdf.output(dest='S')
 
 if st.button("🚀 Run Detection", type="primary"):
