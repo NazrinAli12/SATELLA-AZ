@@ -13,12 +13,19 @@ col1, col2, col3 = st.columns([1, 2, 1])
 
 with col1:
     st.header("📍 Coordinates")
-    lat = st.number_input("Latitude", value=40.3948, min_value=39.0, max_value=42.0, step=0.00001, format="%.6f")
-    lon = st.number_input("Longitude", value=49.8493, min_value=44.0, max_value=51.0, step=0.00001, format="%.6f")
+    # TEXT INPUT - ACCEPTS ANY NUMBER LENGTH!
+    lat_input = st.text_input("Latitude", value="40.394799")
+    lon_input = st.text_input("Longitude", value="49.849585")
     
-    # CACHE TƏMİZLE BUTTON
-    if st.button("🔄 MAP Yenilə", type="secondary"):
-        st.cache_data.clear()
+    try:
+        lat = float(lat_input)
+        lon = float(lon_input)
+        st.success(f"✅ Ready: {lat:.6f}, {lon:.6f}")
+    except:
+        st.error("❌ Enter numbers only!")
+        st.stop()
+    
+    if st.button("🗺️ Update MAP", type="secondary"):
         st.rerun()
 
 with col2:
