@@ -16,6 +16,7 @@ with col1:
     if st.button("🗺️ MAP-i Yenilə", type="primary"):
         st.session_state.lat = lat
         st.session_state.lon = lon
+        st.success(f"📍 {lat:.6f}°N, {lon:.6f}°E - Analiz hazır!")  # DYNAMIC!
         st.rerun()
 
 # MAP BÖLÜMÜ - CACHE YOX!
