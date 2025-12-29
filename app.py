@@ -3,7 +3,6 @@ import folium
 from streamlit_folium import folium_static
 from fpdf import FPDF
 from datetime import datetime
-import io
 
 st.set_page_config(page_title="SATELLA", layout="wide")
 
@@ -56,7 +55,7 @@ if baseline:
 if current: 
     st.image(current, caption="2025 Current", use_column_width=True)
 
-# REAL PDF FUNCTION (100% DÜZELDİLMİŞ)
+# REAL PDF FUNCTION (DÜZELDİLMİŞ - NO ENCODE!)
 def create_pdf(lat, lon):
     pdf = FPDF()
     pdf.add_page()
@@ -66,7 +65,7 @@ def create_pdf(lat, lon):
     pdf.cell(0, 15, "SATELLA FHN Report", ln=1, align="C")
     pdf.ln(10)
     
-    # Generated time
+    # Date
     pdf.set_font("Arial", '', 12)
     pdf.cell(0, 10, f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}", ln=1)
     pdf.ln(5)
@@ -75,7 +74,7 @@ def create_pdf(lat, lon):
     pdf.set_font("Arial", 'B', 16)
     pdf.cell(0, 10, "Location:", ln=1)
     pdf.set_font("Arial", '', 14)
-    pdf.cell(0, 10, f"{lat:.6f}N, {lon:.6f}E", ln=1)
+    pdf.cell(0, 10, f"{lat:.6f}N {lon:.6f}E", ln=1)
     pdf.ln(10)
     
     # Results
@@ -85,24 +84,21 @@ def create_pdf(lat, lon):
     pdf.cell(0, 10, "New Structures: 6", ln=1)
     pdf.cell(0, 10, "Precision: 92%", ln=1)
     pdf.cell(0, 10, "F1-Score: 90%", ln=1)
-    pdf.cell(0, 10, "Area Analyzed: 0.9 km²", ln=1)
+    pdf.cell(0, 10, "Area Analyzed: 0.9 km2", ln=1)
     
     # Footer
     pdf.ln(15)
     pdf.set_font("Arial", '', 12)
     pdf.cell(0, 10, "Status: Ready for FHN submission", ln=1, align="C")
     
-    # CORRECT PDF OUTPUT
-    buffer = io.BytesIO()
-    buffer.write(pdf.output(dest='S'))
-    buffer.seek(0)
-    return buffer.getvalue()
+    # CRITICAL FIX: NO .encode() - direct bytes!
+    return pdf.output(dest='S')
 
 if st.button("🚀 Run Detection", type="primary"):
     if baseline and current:
         st.balloons()
         st.success("✅ 6 new illegal structures detected!")
-        st.info("🔴 Red areas = New construction\n🟡 Yellow = Possible violations")
+        st.info("Red areas = New construction, Yellow = Possible violations")
         
         col_pdf1, col_pdf2 = st.columns([1,3])
         with col_pdf1:
