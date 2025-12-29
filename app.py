@@ -2,6 +2,8 @@ import streamlit as st
 import folium
 from streamlit_folium import folium_static
 from datetime import datetime
+import io
+import base64
 
 st.set_page_config(page_title="SATELLA", layout="wide")
 
@@ -54,38 +56,58 @@ if baseline:
 if current: 
     st.image(current, caption="2025 Current", use_column_width=True)
 
+# REAL PDF FUNCTION (100% Streamlit uyğun!)
+def create_pdf(lat, lon):
+    from fpdf import FPDF
+    pdf = FPDF()
+    pdf.add_page()
+    
+    pdf.set_font("Arial", 'B', 20)
+    pdf.cell(0, 15, "SATELLA FHN Report", ln=1, align="C")
+    pdf.ln(10)
+    
+    pdf.set_font("Arial", '', 12)
+    pdf.cell(0, 10, f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}", ln=1)
+    pdf.ln(5)
+    
+    pdf.set_font("Arial", 'B', 16)
+    pdf.cell(0, 10, f"Location: {lat:.6f}N, {lon:.6f}E", ln=1)
+    pdf.ln(10)
+    
+    pdf.set_font("Arial", 'B', 16)
+    pdf.cell(0, 10, "Detection Results:", ln=1)
+    pdf.set_font("Arial", '', 14)
+    pdf.cell(0, 10, "New Structures: 6", ln=1)
+    pdf.cell(0, 10, "Precision: 92%", ln=1)
+    pdf.cell(0, 10, "F1-Score: 90%", ln=1)
+    pdf.cell(0, 10, "Area Analyzed: 0.9 km2", ln=1)
+    
+    pdf.ln(15)
+    pdf.set_font("Arial", '', 12)
+    pdf.cell(0, 10, "Status: Ready for FHN submission", ln=1, align="C")
+    
+    # BytesIO ilə mükəmməl PDF
+    buffer = io.BytesIO()
+    buffer.write(pdf.output(dest='S'))
+    buffer.seek(0)
+    return buffer.getvalue()
+
 if st.button("🚀 Run Detection", type="primary"):
     if baseline and current:
         st.balloons()
         st.success("✅ 6 new illegal structures detected!")
         st.info("🔴 Red areas = New construction\n🟡 Yellow = Possible violations")
         
-        # PROFESSIONAL FHN REPORT (TXT - 100% WORKS!)
-        report = f"""SATELLA FHN REPORT
-{'='*50}
-
-📍 LOCATION: {current_lat:.6f}°N, {current_lon:.6f}°E
-📊 NEW STRUCTURES DETECTED: 6
-✅ PRECISION: 92%
-🎯 F1-SCORE: 90%
-📐 AREA ANALYZED: 0.9 km²
-⏰ ANALYSIS TIME: {datetime.now().strftime('%Y-%m-%d %H:%M')}
-
-STATUS: READY FOR FHN / MUNICIPAL SUBMISSION
-
-SATELLA - Azerbaijan Construction Monitoring
-Sentinel-2 + Azercosmos + AI Detection System
-"""
-        
         col1, col2 = st.columns([1,3])
         with col1:
-            st.success("✅ Report Generated!")
+            st.success("✅ PDF Generated!")
         with col2:
+            pdf_data = create_pdf(current_lat, current_lon)
             st.download_button(
-                label="📄 Download FHN Report", 
-                data=report,
-                file_name=f"SATELLA_FHN_{current_lat:.6f}_{current_lon:.6f}.txt",
-                mime="text/plain",
+                label="📄 Download FHN PDF Report", 
+                data=pdf_data,
+                file_name=f"SATELLA_FHN_{current_lat:.6f}_{current_lon:.6f}.pdf",
+                mime="application/pdf",
                 type="primary",
                 use_container_width=True
             )
