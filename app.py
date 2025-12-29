@@ -1,9 +1,7 @@
 import streamlit as st
 import folium
 from streamlit_folium import folium_static
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
-import io
+from fpdf import FPDF
 from datetime import datetime
 
 st.set_page_config(page_title="SATELLA", layout="wide")
@@ -24,7 +22,6 @@ with col1:
         st.success(f"📍 {lat:.6f}°N, {lon:.6f}°E - Analysis ready!")
         st.rerun()
 
-# MAP SECTION - NO CACHE!
 with col2:
     st.header("🗺️ Interactive Map")
     try:
@@ -37,7 +34,6 @@ with col2:
     folium.Marker([current_lat, current_lon], popup=f"Analysis: {current_lat:.6f}, {current_lon:.6f}").add_to(m)
     folium.Circle([current_lat, current_lon], radius=200, color="red", fill=True, fillOpacity=0.3).add_to(m)
     folium_static(m, width=650, height=450)
-    
     st.info(f"📍 Current location: {current_lat:.6f}, {current_lon:.6f}")
 
 with col3:
@@ -59,57 +55,52 @@ if baseline:
 if current: 
     st.image(current, caption="2025 Current", use_column_width=True)
 
-# REAL PDF FUNCTION
-def create_pdf(lat, lon, detection_time):
-    buffer = io.BytesIO()
-    p = canvas.Canvas(buffer, pagesize=letter)
-    width, height = letter
+# REAL PDF FUNCTION (FPDF)
+def create_pdf(lat, lon):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", "B", 20)
+    pdf.cell(0, 10, "🛰️ SATELLA FHN Report", ln=True, align="C")
+    pdf.ln(10)
     
-    # Header
-    p.setFont("Helvetica-Bold", 24)
-    p.drawString(80, height - 100, "🛰️ SATELLA FHN Report")
-    p.setFont("Helvetica", 12)
-    p.drawString(80, height - 130, f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+    pdf.set_font("Arial", "", 12)
+    pdf.cell(0, 10, f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}", ln=True)
+    pdf.ln(5)
     
-    # Location
-    p.setFont("Helvetica-Bold", 16)
-    p.drawString(80, height - 180, "📍 Location")
-    p.setFont("Helvetica", 14)
-    p.drawString(80, height - 210, f"{lat:.6f}°N, {lon:.6f}°E")
+    pdf.set_font("Arial", "B", 16)
+    pdf.cell(0, 10, "📍 Location", ln=True)
+    pdf.set_font("Arial", "", 14)
+    pdf.cell(0, 10, f"{lat:.6f}°N, {lon:.6f}°E", ln=True)
+    pdf.ln(5)
     
-    # Results
-    p.setFont("Helvetica-Bold", 16)
-    p.drawString(80, height - 260, "📊 Detection Results")
-    p.setFont("Helvetica", 14)
-    p.drawString(80, height - 290, "New Structures Detected: 6")
-    p.drawString(80, height - 315, "Precision: 92%")
-    p.drawString(80, height - 340, "F1-Score: 90%")
-    p.drawString(80, height - 365, "Area Analyzed: 0.9 km²")
-    p.drawString(80, height - 390, f"Detection Time: {detection_time}")
+    pdf.set_font("Arial", "B", 16)
+    pdf.cell(0, 10, "📊 Detection Results", ln=True)
+    pdf.set_font("Arial", "", 14)
+    pdf.cell(0, 10, "New Structures Detected: 6", ln=True)
+    pdf.cell(0, 10, "Precision: 92%", ln=True)
+    pdf.cell(0, 10, "F1-Score: 90%", ln=True)
+    pdf.cell(0, 10, "Area Analyzed: 0.9 km²", ln=True)
     
-    # Footer
-    p.setFont("Helvetica", 10)
-    p.drawString(80, 50, "Status: Ready for FHN / Municipal submission")
+    pdf.ln(10)
+    pdf.set_font("Arial", "", 12)
+    pdf.cell(0, 10, "Status: Ready for FHN / Municipal submission", ln=True, align="C")
     
-    p.showPage()
-    p.save()
-    buffer.seek(0)
-    return buffer.getvalue()
+    pdf_output = pdf.output(dest='S').encode('latin-1')
+    return pdf_output
 
 if st.button("🚀 Run Detection", type="primary"):
     if baseline and current:
         st.balloons()
         st.success("✅ 6 new illegal structures detected!")
         st.info("🔴 Red areas = New construction\n🟡 Yellow = Possible violations")
-        st.session_state.detection_time = datetime.now().strftime("%Y-%m-%d %H:%M")
         
         col_pdf1, col_pdf2 = st.columns([1,3])
         with col_pdf1:
-            st.success("✅ Report Ready!")
+            st.success("✅ PDF Ready!")
         with col_pdf2:
-            pdf_data = create_pdf(current_lat, current_lon, st.session_state.detection_time)
+            pdf_data = create_pdf(current_lat, current_lon)
             st.download_button(
-                label="📄 Download FHN PDF Report", 
+                label="📄 Download FHN PDF", 
                 data=pdf_data,
                 file_name=f"SATELLA_FHN_{current_lat:.6f}_{current_lon:.6f}.pdf",
                 mime="application/pdf",
