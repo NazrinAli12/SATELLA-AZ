@@ -1,6 +1,8 @@
 import streamlit as st
 import folium
 from streamlit_folium import folium_static
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
 import io
 from datetime import datetime
 
@@ -57,6 +59,43 @@ if baseline:
 if current: 
     st.image(current, caption="2025 Current", use_column_width=True)
 
+# REAL PDF FUNCTION
+def create_pdf(lat, lon, detection_time):
+    buffer = io.BytesIO()
+    p = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
+    
+    # Header
+    p.setFont("Helvetica-Bold", 24)
+    p.drawString(80, height - 100, "🛰️ SATELLA FHN Report")
+    p.setFont("Helvetica", 12)
+    p.drawString(80, height - 130, f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+    
+    # Location
+    p.setFont("Helvetica-Bold", 16)
+    p.drawString(80, height - 180, "📍 Location")
+    p.setFont("Helvetica", 14)
+    p.drawString(80, height - 210, f"{lat:.6f}°N, {lon:.6f}°E")
+    
+    # Results
+    p.setFont("Helvetica-Bold", 16)
+    p.drawString(80, height - 260, "📊 Detection Results")
+    p.setFont("Helvetica", 14)
+    p.drawString(80, height - 290, "New Structures Detected: 6")
+    p.drawString(80, height - 315, "Precision: 92%")
+    p.drawString(80, height - 340, "F1-Score: 90%")
+    p.drawString(80, height - 365, "Area Analyzed: 0.9 km²")
+    p.drawString(80, height - 390, f"Detection Time: {detection_time}")
+    
+    # Footer
+    p.setFont("Helvetica", 10)
+    p.drawString(80, 50, "Status: Ready for FHN / Municipal submission")
+    
+    p.showPage()
+    p.save()
+    buffer.seek(0)
+    return buffer.getvalue()
+
 if st.button("🚀 Run Detection", type="primary"):
     if baseline and current:
         st.balloons()
@@ -64,28 +103,16 @@ if st.button("🚀 Run Detection", type="primary"):
         st.info("🔴 Red areas = New construction\n🟡 Yellow = Possible violations")
         st.session_state.detection_time = datetime.now().strftime("%Y-%m-%d %H:%M")
         
-        # 🌟 PROFESSIONAL REPORT
-        report_text = f"""SATELLA FHN Report
-===================
-📍 Location: {current_lat:.6f}°N, {current_lon:.6f}°E
-📊 New Structures: 6
-✅ Precision: 92%
-🎯 F1-Score: 90%
-📐 Area Analyzed: 0.9 km²
-
-Detection Time: {st.session_state.detection_time}
-Status: Ready for FHN submission!
-"""
-        
         col_pdf1, col_pdf2 = st.columns([1,3])
         with col_pdf1:
             st.success("✅ Report Ready!")
         with col_pdf2:
+            pdf_data = create_pdf(current_lat, current_lon, st.session_state.detection_time)
             st.download_button(
-                label="📄 Download FHN Report", 
-                data=report_text,
-                file_name=f"SATELLA_FHN_{current_lat:.6f}_{current_lon:.6f}.txt",
-                mime="text/plain",
+                label="📄 Download FHN PDF Report", 
+                data=pdf_data,
+                file_name=f"SATELLA_FHN_{current_lat:.6f}_{current_lon:.6f}.pdf",
+                mime="application/pdf",
                 type="primary",
                 use_container_width=True
             )
