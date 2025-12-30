@@ -4,6 +4,7 @@ from streamlit_folium import folium_static
 from datetime import datetime
 from fpdf import FPDF
 import io
+from PIL import Image # Şəkilləri ölçüləndirmək üçün
 
 # 1. Səhifə Konfiqurasiyası
 st.set_page_config(page_title="SATELLA AI", layout="wide", initial_sidebar_state="expanded")
@@ -57,7 +58,7 @@ st.markdown("""
         text-transform: uppercase;
     }
 
-    /* Uğur mesajı (Detected structures) */
+    /* Uğur mesajı */
     .success-msg {
         background: rgba(16, 185, 129, 0.1);
         color: #10b981;
@@ -80,7 +81,15 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# 3. PDF Funksiyası
+# 3. Şəkil Ölçüləndirmə Funksiyası (Eyni ölçü üçün)
+def process_images(img1, img2):
+    i1 = Image.open(img1)
+    i2 = Image.open(img2)
+    # Hər iki şəkli standart 800x600 ölçüsünə gətiririk
+    target_size = (800, 600)
+    return i1.resize(target_size), i2.resize(target_size)
+
+# 4. PDF Funksiyası
 def generate_pdf(lat, lon):
     pdf = FPDF()
     pdf.add_page()
@@ -98,61 +107,56 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
     
-    # Area of Interest
     st.markdown("<p class='sidebar-label'>Area of Interest</p>", unsafe_allow_html=True)
     c1, c2 = st.columns(2)
-    with c1:
-        lat_val = st.text_input("LATITUDE", value="40.394799", key="lat_in")
-    with c2:
-        lon_val = st.text_input("LONGITUDE", value="49.849585", key="lon_in")
+    with c1: lat_val = st.text_input("LATITUDE", value="40.394799", key="lat_in")
+    with c2: lon_val = st.text_input("LONGITUDE", value="49.849585", key="lon_in")
     
-    # Imagery Inputs
     st.markdown("<p class='sidebar-label'>Imagery Inputs</p>", unsafe_allow_html=True)
     st.caption("T0: 2024 Baseline (Reference)")
-    t0 = st.file_uploader("Upload T0", type=["png","jpg"], label_visibility="collapsed", key="u1")
+    t0_file = st.file_uploader("Upload T0", type=["png","jpg"], label_visibility="collapsed", key="u1")
     
     st.caption("T1: 2025 Current (Target)")
-    t1 = st.file_uploader("Upload T1", type=["png","jpg"], label_visibility="collapsed", key="u2")
+    t1_file = st.file_uploader("Upload T1", type=["png","jpg"], label_visibility="collapsed", key="u2")
     
     if st.button("RUN CHANGE DETECTION"):
-        if t0 and t1:
+        if t0_file and t1_file:
             st.session_state.lat = float(lat_val)
             st.session_state.lon = float(lon_val)
             st.session_state.run = True
         else:
             st.error("Please upload both images!")
 
-    # Detection Result
     if st.session_state.get('run', False):
         st.markdown("<div class='success-msg'>✅ Detected 1 new structures.</div>", unsafe_allow_html=True)
 
-# --- ƏSAS EKRAN (XƏRİTƏ VƏ METRİKLƏR) ---
+# --- ƏSAS EKRAN ---
 col_map, col_metrics = st.columns([3.9, 1.1])
 
 with col_map:
     cur_lat = st.session_state.get('lat', 40.394799)
     cur_lon = st.session_state.get('lon', 49.849585)
     
-    # Xəritə (ValueError Fix)
     m = folium.Map(location=[cur_lat, cur_lon], zoom_start=17, tiles=None)
     folium.TileLayer(
         tiles="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
         attr="Esri",
         name="Satellite View"
     ).add_to(m)
-    
     folium.Marker([cur_lat, cur_lon], icon=folium.Icon(color="blue", icon="info-sign")).add_to(m)
     
-    folium_static(m, width=1200, height=650)
+    folium_static(m, width=1200, height=600)
     
-    # Şəkillər xəritənin altında
-    if t0 or t1:
+    # ŞƏKİLLƏRİN EYNİ ÖLÇÜDƏ GÖSTƏRİLMƏSİ
+    if t0_file and t1_file:
         st.markdown("<br>", unsafe_allow_html=True)
+        img1, img2 = process_images(t0_file, t1_file)
+        
         img_c1, img_c2 = st.columns(2)
         with img_c1:
-            if t0: st.image(t0, caption="Baseline 2024", use_container_width=True)
+            st.image(img1, caption="Baseline 2024 (T0)", use_container_width=True)
         with img_c2:
-            if t1: st.image(t1, caption="Current 2025", use_container_width=True)
+            st.image(img2, caption="Current 2025 (T1)", use_container_width=True)
 
 with col_metrics:
     st.markdown("### 📊 Metrics")
