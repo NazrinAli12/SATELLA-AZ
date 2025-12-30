@@ -4,12 +4,12 @@ from streamlit_folium import folium_static
 from datetime import datetime
 from fpdf import FPDF
 import io
-from PIL import Image # Şəkilləri ölçüləndirmək üçün
+from PIL import Image
 
 # 1. Səhifə Konfiqurasiyası
 st.set_page_config(page_title="SATELLA AI", layout="wide", initial_sidebar_state="expanded")
 
-# 2. UI Təkmilləşdirməsi (Yığcam Sidebar və Sağ Panel)
+# 2. UI Təkmilləşdirməsi
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -34,11 +34,8 @@ st.markdown("""
         padding: 1rem !important;
     }
 
-    /* Element sıxlığı */
     .stVerticalBlock { gap: 0.2rem !important; }
-    div[data-testid="stFileUploader"] { margin-bottom: -10px; }
     
-    /* Düymələr */
     div.stButton > button {
         background: #1a73e8 !important;
         border-radius: 6px !important;
@@ -58,7 +55,6 @@ st.markdown("""
         text-transform: uppercase;
     }
 
-    /* Uğur mesajı */
     .success-msg {
         background: rgba(16, 185, 129, 0.1);
         color: #10b981;
@@ -81,13 +77,17 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# 3. Şəkil Ölçüləndirmə Funksiyası (Eyni ölçü üçün)
+# 3. Şəkil Ölçüləndirmə (Tam eyni ölçü üçün məcburi format)
 def process_images(img1, img2):
     i1 = Image.open(img1)
     i2 = Image.open(img2)
-    # Hər iki şəkli standart 800x600 ölçüsünə gətiririk
-    target_size = (800, 600)
-    return i1.resize(target_size), i2.resize(target_size)
+    
+    # Hər iki şəkli eyni ölçüyə (məsələn 1024x768) məcburi gətiririk
+    # Atılan nümunədəki kimi dördbucaqlı dursa, ən yaxşı nəticəni verir.
+    target_size = (1024, 768)
+    
+    # LANCZOS filtri keyfiyyəti ən yüksək səviyyədə saxlayır
+    return i1.resize(target_size, Image.Resampling.LANCZOS), i2.resize(target_size, Image.Resampling.LANCZOS)
 
 # 4. PDF Funksiyası
 def generate_pdf(lat, lon):
@@ -147,7 +147,7 @@ with col_map:
     
     folium_static(m, width=1200, height=600)
     
-    # ŞƏKİLLƏRİN EYNİ ÖLÇÜDƏ GÖSTƏRİLMƏSİ
+    # ŞƏKİLLƏRİN SİMMETRİK GÖSTƏRİLMƏSİ
     if t0_file and t1_file:
         st.markdown("<br>", unsafe_allow_html=True)
         img1, img2 = process_images(t0_file, t1_file)
