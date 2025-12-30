@@ -5,175 +5,143 @@ from datetime import datetime
 from fpdf import FPDF
 import io
 
-# 1. Page Config
+# 1. Səhifə konfiqurasiyası
 st.set_page_config(page_title="SATELLA | AI Studio", layout="wide", initial_sidebar_state="expanded")
 
-# 2. UI MIRROR CSS (Şəkillərdəki tam görüntü)
+# 2. UI TƏKMİLLƏŞDİRMƏ (Xəritə ölçüsü və Sağ Panel daxil)
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
     
-    /* Ana fon və Scroll-un ləğvi */
+    /* Ana Ekran Arxivlənmiş Scroll-suz */
     html, body, [data-testid="stAppViewContainer"], .main {
         font-family: 'Inter', sans-serif;
         background-color: #0b0d0e !important;
         overflow: hidden !important;
     }
 
+    /* Streamlit-in standart artıq boşluqlarını silirik */
     [data-testid="stHeader"] { display: none; }
-    .block-container { padding: 0 !important; }
+    .block-container { padding: 0 !important; max-width: 100% !important; }
 
-    /* SOL SIDEBAR - Compact Style */
+    /* SOL SIDEBAR */
     section[data-testid="stSidebar"] {
         background-color: #111418 !important;
         border-right: 1px solid #2d333b !important;
         width: 260px !important;
     }
-    section[data-testid="stSidebar"] > div { overflow: hidden !important; }
-    
-    /* SAĞ PANEL - Fixed Settings Panel (Şəkildəki kimi) */
+
+    /* SAĞ PANEL - FIXED & DATA VISIBLE */
     [data-testid="column"]:nth-child(2) {
         background-color: #111418 !important;
         border-left: 1px solid #2d333b !important;
+        position: fixed !important;
+        right: 0;
+        top: 0;
+        width: 320px !important; /* Panel genişliyi sabitləndi */
         height: 100vh !important;
-        padding: 20px 15px !important;
-        position: fixed;
-        right: 0; top: 0;
+        padding: 25px 20px !important;
         z-index: 1000;
         overflow-y: auto;
+        display: block !important;
     }
 
-    /* AI Studio Inputlar */
-    .stTextInput input {
-        background-color: #1a1f24 !important;
-        border: 1px solid #3c4043 !important;
-        border-radius: 4px !important;
-        color: #e8eaed !important;
+    /* XƏRİTƏ SAHƏSİ - Ölçü tənzimləməsi */
+    [data-testid="column"]:nth-child(1) {
+        width: calc(100% - 320px) !important; /* Xəritə sağ panelə yer saxlayır */
+        padding-right: 20px;
     }
 
-    /* Mavi "Zoom" və "Run" düymələri */
+    /* Google AI Studio Düymə Stili */
     div.stButton > button {
         background-color: #1a73e8 !important;
         color: white !important;
+        border-radius: 20px !important;
         border: none !important;
-        border-radius: 6px !important;
         font-size: 13px !important;
-        font-weight: 500 !important;
-        height: 38px !important;
-        width: 100% !important;
+        height: 36px !important;
+        transition: 0.3s;
     }
+    div.stButton > button:hover { background-color: #1557b0 !important; box-shadow: 0 0 10px rgba(26,115,232,0.4); }
 
-    /* Metrika Kartları (Şəkildəki Box-lar) */
-    .metric-box {
+    /* Metrika Kartları */
+    .metric-card {
         background: #1a1f24;
         border: 1px solid #3c4043;
-        border-radius: 8px;
-        padding: 12px;
-        margin-bottom: 10px;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 12px;
     }
-    .metric-label { color: #9aa0a6; font-size: 10px; font-weight: 700; text-transform: uppercase; }
-    .metric-value { color: #ffffff; font-size: 20px; font-weight: 600; margin-top: 4px; }
+    .m-title { color: #9aa0a6; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+    .m-value { color: #ffffff; font-size: 22px; font-weight: 600; margin-top: 5px; }
 
-    /* Progress Barlar (Precision/Recall üçün) */
-    .progress-wrapper { margin-bottom: 15px; }
-    .progress-text { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; color: #9aa0a6; }
-    .bar-bg { background: #3c4043; height: 4px; border-radius: 2px; }
-    .bar-fill { height: 4px; border-radius: 2px; }
+    /* Progress Barlar */
+    .p-bar-label { display: flex; justify-content: space-between; font-size: 11px; color: #9aa0a6; margin-bottom: 4px; }
+    .p-bar-bg { background: #3c4043; height: 5px; border-radius: 3px; margin-bottom: 15px; }
+    .p-bar-fill { height: 100%; border-radius: 3px; }
 
-    /* Warning Box */
-    .warning-card {
-        background: rgba(255, 171, 0, 0.05);
-        border: 1px solid rgba(255, 171, 0, 0.2);
-        padding: 12px;
-        border-radius: 8px;
-        color: #ffab00;
-        font-size: 11px;
-        margin: 15px 0;
-    }
 </style>
 """, unsafe_allow_html=True)
 
-# 3. PDF Generator
-def generate_pdf(lat, lon):
+# PDF Funksiyası
+def get_pdf(lat, lon):
     pdf = FPDF()
     pdf.add_page()
-    pdf.set_font("Arial", 'B', 16)
-    pdf.cell(0, 10, "SATELLA - Construction Report", ln=True)
-    pdf.set_font("Arial", size=12)
-    pdf.cell(0, 10, f"Coordinate: {lat}, {lon}", ln=True)
-    pdf.cell(0, 10, f"Analysis Time: {datetime.now().strftime('%Y-%m-%d %H:%M')}", ln=True)
+    pdf.set_font("Arial", 'B', 14)
+    pdf.cell(0, 10, "SATELLA ANALYSIS REPORT", ln=True)
     return pdf.output(dest='S').encode('latin-1')
 
 # --- SOL SIDEBAR ---
 with st.sidebar:
+    st.markdown("<h2 style='color:white; font-size:20px; margin-bottom:20px;'>🛰️ SATELLA</h2>", unsafe_allow_html=True)
+    
+    st.markdown("**Location Control**")
+    lat_val = st.text_input("Latitude", "40.4093", label_visibility="collapsed")
+    lon_val = st.text_input("Longitude", "49.8671", label_visibility="collapsed")
+    
+    if st.button("Update View", use_container_width=True):
+        st.session_state.lat = float(lat_val)
+        st.session_state.lon = float(lon_val)
+
+    st.markdown("<br>**Satellite Feed**", unsafe_allow_html=True)
+    st.file_uploader("T0 Baseline", type=['png','jpg','tif'], label_visibility="collapsed")
+    st.file_uploader("T1 Current", type=['png','jpg','tif'], label_visibility="collapsed")
+
+# --- ANA LAYOUT ---
+c_map, c_data = st.columns([4, 1]) # Vizual olaraq bölünür, amma CSS bunu override edir
+
+with c_map:
+    # Live Badge
+    st.markdown("<div style='position:absolute; top:20px; left:20px; z-index:999; background:rgba(17,20,24,0.8); padding:5px 15px; border-radius:20px; color:#3fb950; font-size:12px; border:1px solid #3c4043;'>● LIVE SYSTEM</div>", unsafe_allow_html=True)
+    
+    curr_lat = st.session_state.get('lat', 40.4093)
+    curr_lon = st.session_state.get('lon', 49.8671)
+    
+    m = folium.Map([curr_lat, curr_lon], zoom_start=16, tiles="CartoDB dark_matter", zoom_control=False)
+    folium.Circle([curr_lat, curr_lon], 300, color="#1a73e8", fill=True, opacity=0.2).add_to(m)
+    folium_static(m, width=1150, height=880) # Xəritə genişliyi idarə altına alındı
+
+with c_data:
+    st.markdown("<p style='color:white; font-size:18px; font-weight:500;'>Analysis Results</p>", unsafe_allow_html=True)
+    
+    # Metrikalar
     st.markdown("""
-        <div style='display:flex; align-items:center; gap:10px; margin-bottom:20px'>
-            <div style='background:#1a73e8; padding:5px 8px; border-radius:4px; font-weight:bold; color:white'>S</div>
-            <div style='color:white; font-weight:600; font-size:16px'>SATELLA</div>
-        </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown("<p style='color:#9aa0a6; font-size:10px; font-weight:700'>AREA OF INTEREST</p>", unsafe_allow_html=True)
-    lat_in = st.text_input("Lat", "40.4093", label_visibility="collapsed")
-    lon_in = st.text_input("Lon", "49.8671", label_visibility="collapsed")
-    
-    if st.button("Zoom to Coordinate"):
-        st.session_state.lat = float(lat_in)
-        st.session_state.lon = float(lon_in)
-
-    st.markdown("<br><p style='color:#9aa0a6; font-size:10px; font-weight:700'>RASTER DATA</p>", unsafe_allow_html=True)
-    baseline = st.file_uploader("Baseline (T0)", type=["tif", "png", "jpg"], label_visibility="collapsed")
-    current = st.file_uploader("Current (T1)", type=["tif", "png", "jpg"], label_visibility="collapsed")
-    
-    st.markdown("<div style='position:fixed; bottom:20px; color:#5f6368; font-size:10px;'>SATELLA v1.0 | AI Studio Clone</div>", unsafe_allow_html=True)
-
-# --- ANA EKRAN (MAP) ---
-col_map, col_metrics = st.columns([4.2, 1.2])
-
-with col_map:
-    # Live Monitoring Badge
-    st.markdown("""
-        <div style='position:absolute; top:20px; left:20px; z-index:1000; background:#111418; padding:6px 14px; border-radius:20px; border:1px solid #3c4043; color:white; font-size:11px; display:flex; align-items:center; gap:8px'>
-            <span style='height:8px; width:8px; background:#ea4335; border-radius:50%'></span> LIVE MONITORING
-        </div>
+        <div class="metric-card"><div class="m-title">New Structures</div><div class="m-value">6 detected</div></div>
+        <div class="metric-card"><div class="m-title">Analyzed Area</div><div class="m-value">1.4 km²</div></div>
     """, unsafe_allow_html=True)
     
-    l_val = st.session_state.get('lat', 40.4093)
-    lo_val = st.session_state.get('lon', 49.8671)
+    st.divider()
     
-    m = folium.Map([l_val, lo_val], zoom_start=15, tiles="CartoDB dark_matter", zoom_control=False)
-    folium.Circle([l_val, lo_val], 200, color="#1a73e8", fill=True, opacity=0.3).add_to(m)
-    folium_static(m, width=1450, height=900)
-
-# --- SAĞ PANEL (METRICS) ---
-with col_metrics:
-    st.markdown("<p style='color:white; font-size:16px; font-weight:500; margin-bottom:20px'>System Metrics</p>", unsafe_allow_html=True)
-    
-    # Yeni Tikililər Box
-    st.markdown("""
-        <div style='display:flex; gap:10px'>
-            <div class='metric-box' style='flex:1'><div class='metric-label'>New Structures</div><div class='metric-value'>6</div></div>
-            <div class='metric-box' style='flex:1'><div class='metric-label'>Status</div><div class='metric-value' style='color:#3fb950; font-size:14px'>✓ Ready</div></div>
-        </div>
-    """, unsafe_allow_html=True)
-
     # Proqress Barlar
-    metrics = [("Precision (IoU)", "92%", "#4285f4"), ("Recall Rate", "88%", "#34a853"), ("F1 Performance", "90%", "#a142f4")]
-    for label, val, color in metrics:
+    stats = [("Precision", "92%", "#4285f4"), ("Recall", "88%", "#34a853"), ("F1-Score", "90%", "#a142f4")]
+    for n, p, c in stats:
         st.markdown(f"""
-            <div class='progress-wrapper'>
-                <div class='progress-text'><span>{label}</span><span>{val}</span></div>
-                <div class='bar-bg'><div class='bar-fill' style='width:{val}; background:{color}'></div></div>
-            </div>
+            <div class="p-bar-label"><span>{n}</span><span>{p}</span></div>
+            <div class="p-bar-bg"><div class="p-bar-fill" style="width:{p}; background:{c};"></div></div>
         """, unsafe_allow_html=True)
 
-    st.markdown("""
-        <div class='warning-card'>
-            <b>Verification Required</b><br>
-            Changes detected in sensitive zones. Generated reports must be submitted to FHN for field verification.
-        </div>
-    """, unsafe_allow_html=True)
-
-    if st.button("Generate FHN Report (PDF)"):
-        pdf_data = generate_pdf(l_val, lo_val)
-        st.download_button("Click to Download", pdf_data, "Satella_Report.pdf", use_container_width=True)
+    if st.button("Generate Official Report", use_container_width=True):
+        pdf_bytes = get_pdf(curr_lat, curr_lon)
+        st.download_button("Download PDF", pdf_bytes, "Satella_Report.pdf", use_container_width=True)
+    
+    st.markdown("<div style='margin-top:30px; border:1px solid #ffab0033; background:#ffab0011; padding:10px; border-radius:8px; color:#ffab00; font-size:11px;'><b>Note:</b> Manual field verification is required for anomalies in zone A-4.</div>", unsafe_allow_html=True)
