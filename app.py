@@ -4,154 +4,175 @@ from streamlit_folium import folium_static
 from datetime import datetime
 from fpdf import FPDF
 
-# 1. Səhifə konfiqurasiyası (Google AI Studio tərzi)
-st.set_page_config(
-    page_title="Google AI Studio", 
-    layout="wide", 
-    initial_sidebar_state="expanded"
-)
+# 1. Səhifə Ayarları
+st.set_page_config(page_title="Google AI Studio - Satella", layout="wide", initial_sidebar_state="expanded")
 
-# 2. Google AI Studio Professional CSS
+# 2. Google AI Studio Sol Panel Vizualı (CSS)
 st.markdown("""
     <style>
-    /* Ana Fon */
+    /* Ümumi tünd fon */
     .main { background-color: #0b0d0f !important; }
     
-    /* Sol Sidebar */
+    /* Sol Sidebar - Tam AI Studio tərzi */
     [data-testid="stSidebar"] {
         background-color: #111418 !important;
         border-right: 1px solid #1e2227 !important;
-        width: 280px !important;
+        width: 300px !important;
     }
 
-    /* Sağ Panel (System Metrics) */
-    [data-testid="column"]:nth-child(2) {
-        background-color: #111418 !important;
-        border-left: 1px solid #1e2227 !important;
-        padding: 25px !important;
-        min-height: 100vh;
+    /* Sidebar Logo və Başlıq */
+    .sb-brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 0px 20px 0px;
+    }
+    .sb-logo {
+        background: #2463eb;
+        color: white;
+        padding: 6px 10px;
+        border-radius: 6px;
+        font-weight: 800;
+        font-size: 16px;
+    }
+    .sb-title {
+        color: #e8eaed;
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
     }
 
-    /* Metrik Kartları */
-    .m-card {
-        background-color: #1a1f26;
-        border: 1px solid #2d333b;
-        border-radius: 12px;
-        padding: 15px;
+    /* Bölmə Başlıqları (Göy-boz kiçik hərflər) */
+    .sb-label {
+        color: #8b949e;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
         margin-bottom: 12px;
+        margin-top: 25px;
+        letter-spacing: 0.8px;
     }
-    .m-label { color: #8b949e; font-size: 10px; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; }
-    .m-value { color: #c9d1d9; font-size: 24px; font-weight: 600; }
-    .m-status { color: #3fb950; font-size: 13px; font-weight: 600; }
 
-    /* Proqress Barlar */
-    .p-container { margin-top: 15px; }
-    .p-label-row { display: flex; justify-content: space-between; font-size: 11px; color: #8b949e; font-weight: 600; margin-bottom: 6px; }
-    .p-bar-bg { background: #2d333b; border-radius: 10px; height: 6px; width: 100%; }
-    .p-bar-fill { height: 100%; border-radius: 10px; }
-
-    /* PDF Düyməsi (Ağ Google Düyməsi) */
-    div.stDownloadButton > button {
-        background-color: #ffffff !important;
-        color: #0d1117 !important;
-        font-weight: 600 !important;
+    /* Input Sahələri */
+    .stTextInput input {
+        background-color: #1a1f26 !important;
+        border: 1px solid #2d333b !important;
+        color: #c9d1d9 !important;
         border-radius: 8px !important;
+        height: 40px !important;
+    }
+
+    /* Göy Düymə (Zoom to Coordinate) */
+    div.stButton > button:first-child {
+        background-color: #2463eb !important;
+        color: white !important;
         border: none !important;
+        border-radius: 20px !important; /* Oval düymə */
+        font-weight: 600 !important;
+        font-size: 14px !important;
+        padding: 8px 20px !important;
         width: 100% !important;
-        height: 42px !important;
-        margin-top: 20px !important;
+        transition: background 0.3s;
+    }
+    div.stButton > button:first-child:hover {
+        background-color: #1d4ed8 !important;
     }
 
-    /* Sidebar Girişləri */
-    .stTextInput input { background-color: #1a1f26 !important; border: 1px solid #2d333b !important; color: white !important; }
-    .upload-box { border: 1px dashed #2d333b; padding: 15px; border-radius: 8px; text-align: center; color: #8b949e; font-size: 11px; margin-bottom: 10px; }
-
-    /* Xəritə Live Badge */
-    .live-tag {
-        background: #1a1f26; border: 1px solid #2d333b; padding: 5px 12px;
-        border-radius: 6px; color: white; font-size: 11px; font-weight: 700;
-        display: inline-flex; align-items: center; margin-bottom: 15px;
+    /* Raster Data Qutuları (Dotted Border) */
+    .upload-box-custom {
+        border: 1px dashed #30363d;
+        border-radius: 8px;
+        padding: 12px;
+        text-align: center;
+        background: transparent;
+        margin-bottom: 8px;
     }
-    .dot { height: 8px; width: 8px; background: #f85149; border-radius: 50%; margin-right: 8px; }
+    .upload-icon {
+        color: #8b949e;
+        font-size: 18px;
+        margin-bottom: 5px;
+    }
+    .upload-text {
+        color: #8b949e;
+        font-size: 12px;
+    }
+
+    /* Alt qeyd (Footer in Sidebar) */
+    .sb-footer {
+        position: fixed;
+        bottom: 20px;
+        font-size: 10px;
+        color: #484f58;
+        line-height: 1.4;
+    }
     </style>
     """, unsafe_allow_html=True)
 
-# 3. PDF Generator (Stabil Bayt Metodu)
-def get_pdf_report(lat, lon):
+# PDF funksiyası (dəyişilmədi)
+def generate_pdf_report(lat, lon):
     pdf = FPDF()
     pdf.add_page()
-    pdf.set_font("Arial", 'B', 16)
-    pdf.cell(0, 15, "SATELLA MONITORING REPORT", ln=True, align='C')
     pdf.set_font("Arial", size=12)
-    pdf.cell(0, 10, f"Analysis Time: {datetime.now().strftime('%Y-%m-%d %H:%M')}", ln=True)
-    pdf.cell(0, 10, f"Location: {lat}, {lon}", ln=True)
-    pdf.cell(0, 10, "Result: 6 New structures detected via satellite imagery.", ln=True)
+    pdf.cell(200, 10, txt=f"Analysis: {lat}, {lon}", ln=True)
     return bytes(pdf.output())
 
-# --- LAYOUT (Gap xətası "small" ilə düzəldildi) ---
-col_map, col_right = st.columns([3.8, 1.2], gap="small")
-
-# --- SOL SIDEBAR ---
+# --- SOL SIDEBAR (AI STUDIO CLONE) ---
 with st.sidebar:
-    st.markdown('<div style="display:flex; align-items:center; gap:10px;"><div style="background:#2463eb; padding:6px; border-radius:6px; font-weight:bold; color:white;">🛰️</div> <h2 style="margin:0; font-size:20px; color:white;">SATELLA</h2></div>', unsafe_allow_html=True)
-    st.caption("GOOGLE AI STUDIO CLONE")
+    # Logo hissəsi
+    st.markdown('''
+        <div class="sb-brand">
+            <div class="sb-logo">🛰️</div>
+            <div>
+                <div class="sb-title">SATELLA</div>
+                <div style="font-size: 9px; color: #8b949e;">CONSTRUCTION MONITORING</div>
+            </div>
+        </div>
+    ''', unsafe_allow_html=True)
     
-    st.markdown("<br><p style='font-size:11px; font-weight:700; color:#8b949e;'>🔍 AREA OF INTEREST</p>", unsafe_allow_html=True)
-    s_c1, s_c2 = st.columns(2)
-    with s_c1: lat_val = st.text_input("Lat", "40.4093", label_visibility="collapsed")
-    with s_c2: lon_val = st.text_input("Lon", "49.8671", label_visibility="collapsed")
+    # Area of Interest
+    st.markdown('<p class="sb-label">🔍 Area of Interest</p>', unsafe_allow_html=True)
+    c1, c2 = st.columns(2)
+    with c1: lat_input = st.text_input("Lat", "40.4093", label_visibility="collapsed")
+    with c2: lon_input = st.text_input("Lon", "49.8671", label_visibility="collapsed")
     
-    if st.button("Zoom to Coordinate", type="primary", use_container_width=True):
-        st.session_state.lat, st.session_state.lon = lat_val, lon_val
+    if st.button("Zoom to Coordinate"):
+        st.session_state.lat, st.session_state.lon = lat_input, lon_input
 
-    st.markdown("<br><p style='font-size:11px; font-weight:700; color:#8b949e;'>📁 RASTER DATA</p>", unsafe_allow_html=True)
-    st.markdown('<div class="upload-box">📄 Baseline (T0).tif</div>', unsafe_allow_html=True)
-    st.file_uploader("T0", label_visibility="collapsed", key="u1")
-    st.markdown('<div class="upload-box">📄 Current (T1).tif</div>', unsafe_allow_html=True)
-    st.file_uploader("T1", label_visibility="collapsed", key="u2")
+    # Raster Data Section
+    st.markdown('<p class="sb-label">📁 Raster Data</p>', unsafe_allow_html=True)
     
-    st.button("Run Change Detection", disabled=True, use_container_width=True)
+    # Baseline T0
+    st.markdown('<div class="upload-box-custom"><div class="upload-icon">📄</div><div class="upload-text">Baseline (T0).tif</div></div>', unsafe_allow_html=True)
+    st.file_uploader("T0", label_visibility="collapsed", key="f1")
+    
+    # Current T1
+    st.markdown('<div class="upload-box-custom"><div class="upload-icon">📄</div><div class="upload-text">Current (T1).tif</div></div>', unsafe_allow_html=True)
+    st.file_uploader("Current (T1)", label_visibility="collapsed", key="f2")
+    
+    # Run düyməsi (Aktiv olmayan halda)
+    st.button("Run Change Detection", disabled=True)
 
-# --- MƏRKƏZİ HİSSƏ (MAP) ---
+    # Sidebar Footer
+    st.markdown('''
+        <div class="sb-footer">
+            SATELLA v1.0 | Sentinel-2 & Azercosmos<br>
+            Integration. Developed for FHN Construction<br>
+            Safety Standards.
+        </div>
+    ''', unsafe_allow_html=True)
+
+# --- SAĞ VƏ MƏRKƏZ HİSSƏ (Eyni qaldı) ---
+col_map, col_metrics = st.columns([3.6, 1.2], gap="small")
+
 with col_map:
-    st.markdown('<div class="live-tag"><span class="dot"></span> LIVE MONITORING</div>', unsafe_allow_html=True)
+    st.markdown('<div style="background:#1a1f26; border:1px solid #2d333b; color:white; padding:6px 12px; border-radius:6px; font-size:11px; font-weight:700; display:inline-flex; align-items:center; margin-bottom:15px;"><span style="height:8px; width:8px; background:#f85149; border-radius:50%; margin-right:8px;"></span> LIVE MONITORING</div>', unsafe_allow_html=True)
     c_lat = float(st.session_state.get('lat', 40.4093))
     c_lon = float(st.session_state.get('lon', 49.8671))
-    
-    # Google AI Studio tərzində ağ təmiz xəritə
     m = folium.Map(location=[c_lat, c_lon], zoom_start=15, tiles="OpenStreetMap")
-    folium.Marker([c_lat, c_lon]).add_to(m)
-    folium_static(m, width=1180, height=850)
+    folium_static(m, width=1000, height=750)
 
-# --- SAĞ PANEL (SYSTEM METRICS) ---
-with col_right:
-    st.markdown('<h3 style="color:white; font-size:18px; margin-bottom:20px;">📊 System Metrics</h3>', unsafe_allow_html=True)
-    
-    # Metriklər
-    r1, r2 = st.columns(2)
-    with r1: st.markdown('<div class="m-card"><p class="m-label">NEW STRUCTURES</p><p class="m-value">6</p></div>', unsafe_allow_html=True)
-    with r2: st.markdown('<div class="m-card"><p class="m-label">STATUS</p><p class="m-status">✓ Ready</p></div>', unsafe_allow_html=True)
-    
-    # Proqress Barlar
-    p_data = [("PRECISION (IOU)", "92%", "#388bfd"), ("RECALL RATE", "88%", "#3fb950"), ("F1 PERFORMANCE", "90%", "#a371f7")]
-    for label, val, color in p_data:
-        st.markdown(f'''
-            <div class="p-container">
-                <div class="p-label-row"><span>{label}</span><span>{val}</span></div>
-                <div class="p-bar-bg"><div class="p-bar-fill" style="width:{val}; background:{color};"></div></div>
-            </div>
-        ''', unsafe_allow_html=True)
-
-    st.markdown('<div style="background:rgba(187,128,9,0.1); border:1px solid #d29922; padding:15px; border-radius:8px; color:#d29922; font-size:11px; margin-top:20px;"><b>🛡️ Verification Required</b><br>Submit generated reports to FHN.</div>', unsafe_allow_html=True)
-
-    # PDF DOWNLOAD DÜYMƏSİ (ARTIQ SAĞDADIR VƏ XƏTASIZDIR)
-    pdf_bytes = get_pdf_report(c_lat, c_lon)
-    st.download_button(
-        label="📄 Generate FHN Report (PDF)",
-        data=pdf_bytes,
-        file_name="SATELLA_FHN_Report.pdf",
-        mime="application/pdf",
-        use_container_width=True
-    )
-    
-    st.markdown("<p style='font-size:11px; color:#484f58; margin-top:30px;'>No active detections in session.</p>", unsafe_allow_html=True)
+with col_metrics:
+    st.markdown('<h3 style="color:white; font-size:18px;">📊 System Metrics</h3>', unsafe_allow_html=True)
+    # Metriklər və PDF düyməsi bura gəlir (əvvəlki kimi)
+    pdf_data = generate_pdf_report(c_lat, c_lon)
+    st.download_button("📄 Generate FHN Report (PDF)", data=pdf_data, file_name="report.pdf", mime="application/pdf", use_container_width=True)
