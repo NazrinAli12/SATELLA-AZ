@@ -8,11 +8,92 @@ st.set_page_config(page_title="SATELLA", layout="wide")
 
 st.markdown("""
 <style>
+    * { margin: 0; padding: 0; }
+    
     [data-testid="stAppViewContainer"] {
-        background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #0f172a 100%);
+        background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #0f172a 100%) !important;
     }
-    h1, h2, h3 { color: #06b6d4; }
-    p { color: #a5f3fc; }
+    
+    [data-testid="stHeader"] {
+        background: rgba(15, 23, 42, 0.9) !important;
+        border-bottom: 2px solid rgba(34, 211, 238, 0.5) !important;
+    }
+    
+    h1, h2, h3 { 
+        color: #06b6d4 !important;
+        font-weight: 900 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 2px !important;
+    }
+    
+    p { color: #a5f3fc !important; }
+    
+    [data-testid="stMetricContainer"] {
+        background: rgba(15, 23, 42, 0.8) !important;
+        border: 2px solid rgba(34, 211, 238, 0.4) !important;
+        border-radius: 12px !important;
+        padding: 20px !important;
+    }
+    
+    .stButton > button {
+        background: linear-gradient(135deg, #ef4444 0%, #f97316 100%) !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 8px !important;
+        font-weight: 700 !important;
+        font-size: 16px !important;
+        padding: 12px 24px !important;
+        text-transform: uppercase !important;
+        letter-spacing: 1px !important;
+        box-shadow: 0 0 20px rgba(239, 68, 68, 0.5) !important;
+        transition: all 0.3s !important;
+    }
+    
+    .stButton > button:hover {
+        box-shadow: 0 0 30px rgba(239, 68, 68, 0.8) !important;
+        transform: translateY(-2px) !important;
+    }
+    
+    [data-testid="stTextInput"] input {
+        background-color: rgba(30, 41, 59, 0.7) !important;
+        border: 2px solid rgba(34, 211, 238, 0.4) !important;
+        color: #a5f3fc !important;
+        border-radius: 8px !important;
+        font-family: monospace !important;
+        font-weight: bold !important;
+    }
+    
+    [data-testid="stTextInput"] input:focus {
+        border-color: #06b6d4 !important;
+        box-shadow: 0 0 15px rgba(6, 182, 212, 0.3) !important;
+    }
+    
+    [data-testid="stSuccess"], [data-testid="stInfo"], [data-testid="stWarning"] {
+        border-radius: 12px !important;
+        border: 2px solid !important;
+        background: rgba(30, 41, 59, 0.9) !important;
+        padding: 16px !important;
+    }
+    
+    [data-testid="stSuccess"] { border-color: rgba(34, 197, 94, 0.6) !important; }
+    [data-testid="stInfo"] { border-color: rgba(34, 211, 238, 0.6) !important; }
+    [data-testid="stWarning"] { border-color: rgba(239, 68, 68, 0.6) !important; }
+    
+    [data-testid="stColumn"] {
+        background: rgba(30, 41, 59, 0.4) !important;
+        border-radius: 12px !important;
+        padding: 16px !important;
+    }
+    
+    .stDivider {
+        background: linear-gradient(90deg, transparent, rgba(34, 211, 238, 0.4), transparent) !important;
+    }
+    
+    [data-testid="stFileUploader"] {
+        background: rgba(30, 41, 59, 0.6) !important;
+        border: 2px dashed rgba(34, 211, 238, 0.4) !important;
+        border-radius: 12px !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
