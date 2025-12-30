@@ -1,133 +1,153 @@
 import streamlit as st
 import folium
 from streamlit_folium import folium_static
-from datetime import datetime
 from fpdf import FPDF
+import io
 
-# 1. Səhifəni tam doldurmaq üçün konfiqurasiya
-st.set_page_config(page_title="Google AI Studio", layout="wide", initial_sidebar_state="expanded")
+# 1. Page Config
+st.set_page_config(page_title="SATELLA | AI Studio", layout="wide", initial_sidebar_state="expanded")
 
-# 2. Xətaları aradan qaldıran və Vizualı kopyalayan CSS
+# 2. Perfect UI CSS
 st.markdown("""
     <style>
-    /* Google Sans Stilini tətbiq et */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
     
     html, body, [data-testid="stAppViewContainer"], .main {
         font-family: 'Inter', sans-serif;
         background-color: #0b0d0e !important;
-        color: #e8eaed;
-        margin: 0 !important; padding: 0 !important;
         overflow: hidden !important;
     }
 
-    /* Streamlit-in standart boşluqlarını (Padding) məhv et */
-    [data-testid="stHeader"], .block-container {
-        padding: 0 !important; margin: 0 !important;
-        max-width: 100% !important;
-    }
+    [data-testid="stHeader"] { display: none; }
+    .block-container { padding: 0 !important; }
 
-    /* SOL PANEL - Google AI Studio Black */
-    [data-testid="stSidebar"] {
+    /* SOL SIDEBAR */
+    section[data-testid="stSidebar"] {
         background-color: #111418 !important;
         border-right: 1px solid #2d333b !important;
         width: 260px !important;
     }
 
-    /* SAĞ PANEL (Metrics) */
-    [data-testid="column"]:nth-child(2) {
-        background-color: #111418 !important;
-        border-left: 1px solid #2d333b !important;
-        height: 100vh !important;
-        padding: 24px !important;
-        position: fixed; right: 0; top: 0;
+    /* SAĞ PANEL (FIXED & NON-BLOCKING) */
+    .right-info-panel {
+        position: fixed;
+        right: 0; top: 0;
+        width: 320px;
+        height: 100vh;
+        background-color: #111418;
+        border-left: 1px solid #2d333b;
+        padding: 24px;
+        z-index: 1000;
+        color: white;
     }
 
-    /* Logo və Başlıq */
-    .brand { display: flex; align-items: center; gap: 10px; padding-bottom: 20px; }
-    .b-icon { background: #1a73e8; color: white; width: 30px; height: 30px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-    .b-text { font-size: 16px; font-weight: 500; color: #f1f3f4; }
+    /* XƏRİTƏNİN SAĞ PANELƏ GİRMƏMƏSİ ÜÇÜN KONTEYNER */
+    .map-area {
+        margin-right: 320px;
+        height: 100vh;
+    }
 
-    /* AI STUDIO GÖY OVAL DÜYMƏ */
+    /* AI STUDIO DÜYMƏLƏRİ */
     div.stButton > button {
         background-color: #1a73e8 !important;
         color: white !important;
-        border: none !important;
         border-radius: 20px !important;
-        padding: 6px 20px !important;
-        font-size: 13px !important;
+        border: none !important;
+        font-weight: 500 !important;
+        height: 38px !important;
         width: 100% !important;
     }
 
-    /* Input və Upload qutuları */
-    .stTextInput input { background-color: #1a1f24 !important; border: 1px solid #3c4043 !important; color: white !important; }
-    .up-box { border: 1px dashed #3c4043; border-radius: 8px; padding: 12px; text-align: center; color: #9aa0a6; font-size: 11px; margin: 10px 0; }
-
-    /* Metrik Kartları (Sağ) */
-    .m-card { background: #1a1f24; border: 1px solid #3c4043; border-radius: 8px; padding: 15px; margin-bottom: 12px; }
-    .m-label { color: #9aa0a6; font-size: 10px; font-weight: 700; text-transform: uppercase; }
-    .m-value { color: #e8eaed; font-size: 24px; font-weight: 500; }
-
-    /* PDF DÜYMƏSİ (Google White Style) */
-    .stDownloadButton button {
-        background-color: #ffffff !important;
-        color: #111418 !important;
-        border: none !important;
+    /* Inputlar */
+    .stTextInput input {
+        background-color: #1a1f24 !important;
+        border: 1px solid #3c4043 !important;
+        color: white !important;
         border-radius: 6px !important;
-        font-weight: 600 !important;
-        height: 40px !important;
-        width: 100% !important;
+    }
+
+    /* Metrika Kartları */
+    .m-card {
+        background: #1a1f24;
+        border: 1px solid #3c4043;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 12px;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# 3. PDF Generator (Stabil Bayt formatı)
-def make_pdf(lat, lon):
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Arial", 'B', 14)
-    pdf.cell(0, 10, "SATELLA ANALYSIS REPORT", ln=True)
-    pdf.set_font("Arial", size=10)
-    pdf.cell(0, 10, f"Location: {lat}, {lon}", ln=True)
-    return bytes(pdf.output())
+# 3. Session State (Koordinatların dərhal yenilənməsi üçün)
+if 'lat' not in st.session_state:
+    st.session_state.lat = 40.461023
+if 'lon' not in st.session_state:
+    st.session_state.lon = 49.889897
 
 # --- SOL SIDEBAR ---
 with st.sidebar:
-    st.markdown('<div class="brand"><div class="b-icon">S</div><div class="b-text">SATELLA</div></div>', unsafe_allow_html=True)
+    st.markdown("<h2 style='color:white; font-size:22px; margin-bottom:20px;'>🛰️ SATELLA</h2>", unsafe_allow_html=True)
     
-    st.markdown("<p style='color:#9aa0a6; font-size:11px; font-weight:700;'>AREA OF INTEREST</p>", unsafe_allow_html=True)
-    lat_in = st.text_input("Lat", "40.4093", label_visibility="collapsed")
-    lon_in = st.text_input("Lon", "49.8671", label_visibility="collapsed")
+    st.markdown("<p style='color:#9aa0a6; font-size:11px; font-weight:700;'>TARGET ZONE</p>", unsafe_allow_html=True)
+    # On_change istifadə edərək birbaşa session yeniləyirik
+    lat_input = st.text_input("Lat", value=str(st.session_state.lat))
+    lon_input = st.text_input("Lon", value=str(st.session_state.lon))
     
-    if st.button("Zoom to Coordinate"):
-        st.session_state.lat, st.session_state.lon = lat_in, lon_in
+    if st.button("RUN ANALYSIS / ZOOM"):
+        st.session_state.lat = float(lat_input)
+        st.session_state.lon = float(lon_input)
+        st.rerun()
 
-    st.markdown("<p style='color:#9aa0a6; font-size:11px; font-weight:700; margin-top:20px;'>RASTER DATA</p>", unsafe_allow_html=True)
-    st.markdown('<div class="up-box">Baseline (T0).tif</div>', unsafe_allow_html=True)
-    st.file_uploader("T0", label_visibility="collapsed", key="a")
-    st.markdown('<div class="up-box">Current (T1).tif</div>', unsafe_allow_html=True)
-    st.file_uploader("T1", label_visibility="collapsed", key="b")
+    st.markdown("<br><p style='color:#9aa0a6; font-size:11px; font-weight:700;'>IMAGERY</p>", unsafe_allow_html=True)
+    st.file_uploader("Upload", label_visibility="collapsed")
 
-# --- MƏRKƏZ VƏ SAĞ PANEL ---
-# Column Gap xətası burada həll olundu (gap yoxdur, CSS ilə tənzimlənir)
-c_map, c_met = st.columns([4, 1.3])
+# --- SAĞ PANEL (HTML/CSS ilə Sabitlənmiş) ---
+st.markdown(f"""
+    <div class="right-info-panel">
+        <p style='font-size:18px; font-weight:500; margin-bottom:25px;'>Analysis Metrics</p>
+        <div class="m-card">
+            <p style='color:#9aa0a6; font-size:10px; margin:0;'>STRUCTURES FOUND</p>
+            <p style='font-size:24px; font-weight:bold; margin:5px 0;'>6</p>
+        </div>
+        <div class="m-card">
+            <p style='color:#9aa0a6; font-size:10px; margin:0;'>PRECISION</p>
+            <p style='font-size:24px; font-weight:bold; margin:5px 0; color:#3fb950;'>92.4%</p>
+        </div>
+        <div class="m-card">
+            <p style='color:#9aa0a6; font-size:10px; margin:0;'>COORDINATES</p>
+            <p style='font-size:12px; margin:5px 0;'>{st.session_state.lat}, {st.session_state.lon}</p>
+        </div>
+        <p style='color:#5f6368; font-size:10px; margin-top:100px;'>v1.0.2 | Enterprise Ready</p>
+    </div>
+""", unsafe_allow_html=True)
 
-with c_map:
-    # Xəritəni ekrana tam sığdırmaq üçün hündürlük 900+ seçildi
-    clat = float(st.session_state.get('lat', 40.4093))
-    clon = float(st.session_state.get('lon', 49.8671))
-    
-    m = folium.Map(location=[clat, clon], zoom_start=15, tiles="OpenStreetMap", zoom_control=False)
-    folium_static(m, width=1300, height=950)
+# --- MƏRKƏZ (XƏRİTƏ) ---
+# Xəritəni column daxilində deyil, birbaşa geniş sahədə yaradırıq
+st.markdown('<div class="map-area">', unsafe_allow_html=True)
 
-with c_met:
-    st.markdown('<p style="color:#f1f3f4; font-size:16px; font-weight:500; margin-bottom:20px;">System Metrics</p>', unsafe_allow_html=True)
-    
-    st.markdown('<div class="m-card"><p class="m-label">NEW STRUCTURES</p><p class="m-value">6</p></div>', unsafe_allow_html=True)
-    st.markdown('<div class="m-card"><p class="m-label">PRECISION (IOU)</p><p class="m-value">92.4%</p></div>', unsafe_allow_html=True)
-    
-    # PDF Düyməsi
-    pdf_b = make_pdf(clat, clon)
-    st.download_button("Generate PDF Report", data=pdf_b, file_name="report.pdf", use_container_width=True)
+# Xəritə obyekti hər dəfə session_state ilə sıfırdan yaradılır (Bu, yeri işarələməni təmin edir)
+m = folium.Map(
+    location=[st.session_state.lat, st.session_state.lon],
+    zoom_start=18,
+    tiles="CartoDB dark_matter",
+    zoom_control=False
+)
 
-    st.markdown("<div style='margin-top:50px; color:#5f6368; font-size:10px;'>v1.0.2 | AI Studio UI</div>", unsafe_allow_html=True)
+# Qırmızı Marker (Tam mərkəz nöqtə)
+folium.Marker(
+    [st.session_state.lat, st.session_state.lon],
+    icon=folium.Icon(color='red', icon='screenshot', prefix='fa')
+).add_to(m)
+
+# Təsir dairəsi (Mavi aura)
+folium.Circle(
+    [st.session_state.lat, st.session_state.lon],
+    radius=100,
+    color="#1a73e8",
+    fill=True,
+    fill_opacity=0.2
+).add_to(m)
+
+# Xəritəni Render et (Genişlik sağ paneli nəzərə alaraq tənzimlənir)
+folium_static(m, width=1150, height=950)
+
+st.markdown('</div>', unsafe_allow_html=True)
