@@ -4,175 +4,187 @@ from streamlit_folium import folium_static
 from datetime import datetime
 from fpdf import FPDF
 
-# 1. Səhifə Ayarları
-st.set_page_config(page_title="Google AI Studio - Satella", layout="wide", initial_sidebar_state="expanded")
+# 1. Page Configuration
+st.set_page_config(page_title="SATELLA - AI Studio", layout="wide")
 
-# 2. Google AI Studio Sol Panel Vizualı (CSS)
+# 2. AI Studio Mirror CSS
 st.markdown("""
     <style>
-    /* Ümumi tünd fon */
-    .main { background-color: #0b0d0f !important; }
+    /* Ana Fon */
+    .main { background-color: #0d1117 !important; }
     
-    /* Sol Sidebar - Tam AI Studio tərzi */
+    /* Sidebar Ümumi Stil */
     [data-testid="stSidebar"] {
-        background-color: #111418 !important;
-        border-right: 1px solid #1e2227 !important;
-        width: 300px !important;
+        background-color: #161b22 !important;
+        border-right: 1px solid #30363d !important;
+        width: 320px !important;
     }
 
-    /* Sidebar Logo və Başlıq */
-    .sb-brand {
+    /* Logo və Başlıq Sahəsi */
+    .sb-header {
         display: flex;
         align-items: center;
         gap: 12px;
-        padding: 10px 0px 20px 0px;
+        padding: 5px 0px 25px 0px;
     }
-    .sb-logo {
-        background: #2463eb;
+    .sb-icon {
+        background-color: #2f81f7;
         color: white;
-        padding: 6px 10px;
-        border-radius: 6px;
-        font-weight: 800;
-        font-size: 16px;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        font-weight: bold;
     }
-    .sb-title {
-        color: #e8eaed;
+    .sb-brand-name {
+        color: #f0f6fc;
         font-size: 14px;
         font-weight: 600;
         letter-spacing: 0.5px;
+        line-height: 1.2;
+    }
+    .sb-brand-sub {
+        color: #8b949e;
+        font-size: 10px;
+        text-transform: uppercase;
     }
 
-    /* Bölmə Başlıqları (Göy-boz kiçik hərflər) */
-    .sb-label {
+    /* Bölmə Başlıqları */
+    .sb-section-title {
         color: #8b949e;
         font-size: 11px;
-        font-weight: 700;
+        font-weight: 600;
         text-transform: uppercase;
-        margin-bottom: 12px;
-        margin-top: 25px;
-        letter-spacing: 0.8px;
+        margin: 20px 0 10px 0;
+        display: flex;
+        align-items: center;
+        gap: 6px;
     }
 
-    /* Input Sahələri */
+    /* Input və Düymələr */
     .stTextInput input {
-        background-color: #1a1f26 !important;
-        border: 1px solid #2d333b !important;
+        background-color: #0d1117 !important;
+        border: 1px solid #30363d !important;
         color: #c9d1d9 !important;
-        border-radius: 8px !important;
-        height: 40px !important;
+        border-radius: 6px !important;
     }
-
-    /* Göy Düymə (Zoom to Coordinate) */
+    
+    /* GÖY OVAL DÜYMƏ (AI STUDIO TƏRZİ) */
     div.stButton > button:first-child {
-        background-color: #2463eb !important;
+        background-color: #2f81f7 !important;
         color: white !important;
         border: none !important;
-        border-radius: 20px !important; /* Oval düymə */
+        border-radius: 20px !important; /* Oval */
+        font-size: 13px !important;
         font-weight: 600 !important;
-        font-size: 14px !important;
-        padding: 8px 20px !important;
         width: 100% !important;
-        transition: background 0.3s;
-    }
-    div.stButton > button:first-child:hover {
-        background-color: #1d4ed8 !important;
+        padding: 6px 0px !important;
+        margin-top: 10px;
     }
 
-    /* Raster Data Qutuları (Dotted Border) */
-    .upload-box-custom {
+    /* Raster Data Qutuları (Dotted/Dashed) */
+    .raster-box {
         border: 1px dashed #30363d;
-        border-radius: 8px;
-        padding: 12px;
+        border-radius: 10px;
+        padding: 15px;
         text-align: center;
+        margin-bottom: 10px;
         background: transparent;
-        margin-bottom: 8px;
     }
-    .upload-icon {
-        color: #8b949e;
-        font-size: 18px;
-        margin-bottom: 5px;
-    }
-    .upload-text {
+    .raster-label {
         color: #8b949e;
         font-size: 12px;
+        margin-top: 5px;
     }
 
-    /* Alt qeyd (Footer in Sidebar) */
-    .sb-footer {
-        position: fixed;
-        bottom: 20px;
+    /* RUN Düyməsi (Daha tünd/sönük) */
+    div.stButton > button[disabled] {
+        background-color: #21262d !important;
+        color: #484f58 !important;
+        border: 1px solid #30363d !important;
+        border-radius: 8px !important;
+    }
+
+    /* Footer Text */
+    .sb-footer-text {
         font-size: 10px;
         color: #484f58;
-        line-height: 1.4;
+        border-top: 1px solid #21262d;
+        padding-top: 15px;
+        margin-top: 50px;
+        line-height: 1.5;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# PDF funksiyası (dəyişilmədi)
-def generate_pdf_report(lat, lon):
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Arial", size=12)
-    pdf.cell(200, 10, txt=f"Analysis: {lat}, {lon}", ln=True)
-    return bytes(pdf.output())
-
-# --- SOL SIDEBAR (AI STUDIO CLONE) ---
+# 3. Sol Panel Struktur (Sidebar)
 with st.sidebar:
-    # Logo hissəsi
+    # Üst Logo Hissəsi
     st.markdown('''
-        <div class="sb-brand">
-            <div class="sb-logo">🛰️</div>
+        <div class="sb-header">
+            <div class="sb-icon">🛰️</div>
             <div>
-                <div class="sb-title">SATELLA</div>
-                <div style="font-size: 9px; color: #8b949e;">CONSTRUCTION MONITORING</div>
+                <div class="sb-brand-name">SATELLA</div>
+                <div class="sb-brand-sub">CONSTRUCTION MONITORING</div>
             </div>
         </div>
     ''', unsafe_allow_html=True)
     
     # Area of Interest
-    st.markdown('<p class="sb-label">🔍 Area of Interest</p>', unsafe_allow_html=True)
+    st.markdown('<div class="sb-section-title">🔍 AREA OF INTEREST</div>', unsafe_allow_html=True)
     c1, c2 = st.columns(2)
-    with c1: lat_input = st.text_input("Lat", "40.4093", label_visibility="collapsed")
-    with c2: lon_input = st.text_input("Lon", "49.8671", label_visibility="collapsed")
+    with c1: lat_val = st.text_input("Lat", "40.4093", label_visibility="collapsed")
+    with c2: lon_val = st.text_input("Lon", "49.8671", label_visibility="collapsed")
     
     if st.button("Zoom to Coordinate"):
-        st.session_state.lat, st.session_state.lon = lat_input, lon_input
+        st.session_state.lat, st.session_state.lon = lat_val, lon_val
 
-    # Raster Data Section
-    st.markdown('<p class="sb-label">📁 Raster Data</p>', unsafe_allow_html=True)
+    # Raster Data
+    st.markdown('<div class="sb-section-title">📤 RASTER DATA</div>', unsafe_allow_html=True)
     
-    # Baseline T0
-    st.markdown('<div class="upload-box-custom"><div class="upload-icon">📄</div><div class="upload-text">Baseline (T0).tif</div></div>', unsafe_allow_html=True)
-    st.file_uploader("T0", label_visibility="collapsed", key="f1")
+    # Baseline T0 Box
+    st.markdown('<div class="raster-box"><div style="color:#8b949e;">📄</div><div class="raster-label">Baseline (T0).tif</div></div>', unsafe_allow_html=True)
+    st.file_uploader("T0", label_visibility="collapsed", key="file1")
     
-    # Current T1
-    st.markdown('<div class="upload-box-custom"><div class="upload-icon">📄</div><div class="upload-text">Current (T1).tif</div></div>', unsafe_allow_html=True)
-    st.file_uploader("Current (T1)", label_visibility="collapsed", key="f2")
+    # Current T1 Box
+    st.markdown('<div class="raster-box"><div style="color:#8b949e;">📄</div><div class="raster-label">Current (T1).tif</div></div>', unsafe_allow_html=True)
+    st.file_uploader("T1", label_visibility="collapsed", key="file2")
     
-    # Run düyməsi (Aktiv olmayan halda)
     st.button("Run Change Detection", disabled=True)
 
     # Sidebar Footer
     st.markdown('''
-        <div class="sb-footer">
-            SATELLA v1.0 | Sentinel-2 & Azercosmos<br>
-            Integration. Developed for FHN Construction<br>
-            Safety Standards.
+        <div class="sb-footer-text">
+            SATELLA v1.0 | Sentinel-2 & Azercosmos Integration.<br>
+            Developed for FHN Construction Safety Standards.
         </div>
     ''', unsafe_allow_html=True)
 
-# --- SAĞ VƏ MƏRKƏZ HİSSƏ (Eyni qaldı) ---
-col_map, col_metrics = st.columns([3.6, 1.2], gap="small")
+# 4. Mərkəz və Sağ Panel (Funsionallıq qorundu)
+col_map, col_right = st.columns([3.8, 1.2], gap="small")
 
 with col_map:
-    st.markdown('<div style="background:#1a1f26; border:1px solid #2d333b; color:white; padding:6px 12px; border-radius:6px; font-size:11px; font-weight:700; display:inline-flex; align-items:center; margin-bottom:15px;"><span style="height:8px; width:8px; background:#f85149; border-radius:50%; margin-right:8px;"></span> LIVE MONITORING</div>', unsafe_allow_html=True)
-    c_lat = float(st.session_state.get('lat', 40.4093))
-    c_lon = float(st.session_state.get('lon', 49.8671))
-    m = folium.Map(location=[c_lat, c_lon], zoom_start=15, tiles="OpenStreetMap")
-    folium_static(m, width=1000, height=750)
+    st.markdown('<div style="background:#161b22; border:1px solid #30363d; color:white; padding:6px 12px; border-radius:20px; font-size:11px; font-weight:700; display:inline-flex; align-items:center; margin-bottom:15px;"><span style="height:8px; width:8px; background:#f85149; border-radius:50%; margin-right:8px;"></span> LIVE MONITORING</div>', unsafe_allow_html=True)
+    
+    current_lat = float(st.session_state.get('lat', 40.4093))
+    current_lon = float(st.session_state.get('lon', 49.8671))
+    
+    m = folium.Map(location=[current_lat, current_lon], zoom_start=15, tiles="OpenStreetMap")
+    folium_static(m, width=1100, height=800)
 
-with col_metrics:
-    st.markdown('<h3 style="color:white; font-size:18px;">📊 System Metrics</h3>', unsafe_allow_html=True)
-    # Metriklər və PDF düyməsi bura gəlir (əvvəlki kimi)
-    pdf_data = generate_pdf_report(c_lat, c_lon)
-    st.download_button("📄 Generate FHN Report (PDF)", data=pdf_data, file_name="report.pdf", mime="application/pdf", use_container_width=True)
+with col_right:
+    st.markdown('<h3 style="color:#f0f6fc; font-size:18px;">📊 System Metrics</h3>', unsafe_allow_html=True)
+    # Metriklər və digər elementlər bura (əvvəlki kimi stabil qalır)
+    st.info("Metrics ready for display.")
+    
+    # PDF Düyməsi funksionallığı
+    def get_pdf():
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_font("Arial", size=12)
+        pdf.cell(200, 10, txt="SATELLA Report", ln=True)
+        return bytes(pdf.output())
+
+    st.download_button("📄 Generate FHN Report (PDF)", data=get_pdf(), file_name="fhn_report.pdf", use_container_width=True)
