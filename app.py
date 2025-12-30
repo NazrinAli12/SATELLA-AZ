@@ -2,146 +2,184 @@ import streamlit as st
 import folium
 from streamlit_folium import folium_static
 from datetime import datetime
-import io
 from fpdf import FPDF
 
-st.set_page_config(page_title="SATELLA", layout="wide")
+# 1. Ekranın kənarlarındakı boşluqları sıfırlamaq və geniş rejim
+st.set_page_config(page_title="Google AI Studio", layout="wide", initial_sidebar_state="expanded")
 
+# 2. AI STUDIO EXACT CSS (Sıxılmış və professional interfeys)
 st.markdown("""
-<style>
-    body {
-        background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #0f172a 100%);
-        color: #a5f3fc;
+    <style>
+    /* Ümumi tənzimləmələr */
+    @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap');
+    
+    html, body, [data-testid="stAppViewContainer"] {
+        font-family: 'Google Sans', sans-serif;
+        background-color: #0b0d0e !important;
+        overflow: hidden; /* Ekranın sürüşməsinin qarşısını alır */
     }
-    h1, h2, h3 {
-        color: #06b6d4;
+
+    /* Sol Sidebar - AI Studio Tünd Rəngi */
+    [data-testid="stSidebar"] {
+        background-color: #111418 !important;
+        border-right: 1px solid #2d333b !important;
+        width: 260px !important;
+    }
+
+    /* Padding-lərin ləğvi (Ekranı tam doldurmaq üçün) */
+    [data-testid="stHeader"], .main .block-container {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    /* Sağ Panel (Metrics) */
+    [data-testid="column"]:nth-child(2) {
+        background-color: #111418 !important;
+        border-left: 1px solid #2d333b !important;
+        padding: 20px !important;
+        height: 100vh;
+    }
+
+    /* Sol Panel üçün brendinq */
+    .brand-box {
+        padding: 15px 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .brand-icon {
+        background: #1a73e8;
+        color: white;
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         font-weight: bold;
     }
-    .stButton > button {
-        background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
-        color: white;
-        border: none;
-        border-radius: 8px;
+    .brand-text { color: #e8eaed; font-size: 16px; font-weight: 500; }
+
+    /* AI Studio Göy Oval Düyməsi */
+    div.stButton > button {
+        background-color: #1a73e8 !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 20px !important; /* Tam oval */
+        padding: 4px 20px !important;
+        font-size: 13px !important;
+        font-weight: 500 !important;
+        width: auto !important;
+        margin: 10px 0 !important;
     }
-</style>
-""", unsafe_allow_html=True)
 
-st.title("🛰️ SATELLA")
-st.markdown("**Azerbaijan Construction Monitoring | Sentinel-2 + Azercosmos | FHN Ready**")
-st.divider()
+    /* Sidebar Inputları */
+    .stTextInput input {
+        background-color: #1a1f24 !important;
+        border: 1px solid #3c4043 !important;
+        border-radius: 4px !important;
+        color: #e8eaed !important;
+        font-size: 13px !important;
+    }
 
-col1, col2, col3 = st.columns([1, 2, 1])
+    /* Raster Data Qutuları (AI Studio Style) */
+    .upload-area {
+        border: 1px dashed #3c4043;
+        border-radius: 8px;
+        padding: 10px;
+        text-align: center;
+        margin: 10px 0;
+        color: #9aa0a6;
+        font-size: 12px;
+    }
 
-with col1:
-    st.header("📍 Coordinates")
-    lat = st.text_input("Latitude", value="40.394799")
-    lon = st.text_input("Longitude", value="49.849585")
+    /* Xəritə sahəsi (Ekrana sığması üçün) */
+    .map-container {
+        height: 100vh;
+        width: 100%;
+    }
+
+    /* Metrik Kartları */
+    .m-card {
+        background: #1a1f24;
+        border: 1px solid #3c4043;
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 10px;
+    }
+    .m-label { color: #9aa0a6; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+    .m-value { color: #e8eaed; font-size: 22px; font-weight: 500; }
     
-    if st.button("🗺️ Update MAP", type="primary", use_container_width=True):
-        try:
-            st.session_state.lat = float(lat)
-            st.session_state.lon = float(lon)
-            st.success(f"📍 {float(lat):.6f}°N, {float(lon):.6f}°E - Analysis ready!")
-        except:
-            st.error("Invalid coordinates!")
+    /* PDF Düyməsi (Google AI Studio Ağ Düymə) */
+    .stDownloadButton button {
+        background-color: #ffffff !important;
+        color: #202124 !important;
+        border-radius: 4px !important;
+        border: none !important;
+        font-weight: 500 !important;
+        width: 100% !important;
+        height: 36px !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
-with col2:
-    st.header("🗺️ Interactive Map")
-    try:
-        current_lat = float(st.session_state.get('lat', lat))
-        current_lon = float(st.session_state.get('lon', lon))
-    except:
-        current_lat, current_lon = 40.394799, 49.849585
-    
-    m = folium.Map(location=[current_lat, current_lon], zoom_start=18)
-    folium.Marker([current_lat, current_lon], popup=f"Analysis: {current_lat:.6f}, {current_lon:.6f}").add_to(m)
-    folium.Circle([current_lat, current_lon], radius=200, color="red", fill=True, fillOpacity=0.3).add_to(m)
-    folium_static(m, width=650, height=450)
-    st.info(f"📍 Current location: {current_lat:.6f}, {current_lon:.6f}")
-
-with col3:
-    st.header("📊 Detection Results")
-    st.metric("New Structures", 6)
-    st.metric("Precision", "92%")
-    st.metric("F1-Score", "90%")
-    st.metric("Area Analyzed", "0.9 km²")
-
-st.divider()
-
-st.header("📁 Upload Satellite Images")
-col_img1, col_img2 = st.columns(2)
-
-with col_img1:
-    baseline = st.file_uploader("📸 2024 Baseline", type=["jpg", "png"], key="baseline")
-    if baseline:
-        st.image(baseline, caption="2024 Baseline", use_column_width=True)
-
-with col_img2:
-    current = st.file_uploader("📸 2025 Current", type=["jpg", "png"], key="current")
-    if current:
-        st.image(current, caption="2025 Current", use_column_width=True)
-
-st.divider()
-
-def create_pdf(lat, lon):
+# 3. PDF Generator (Stabil)
+def generate_pdf_report(lat, lon):
     pdf = FPDF()
     pdf.add_page()
-    
-    pdf.set_font("Arial", 'B', 22)
-    pdf.cell(0, 15, "SATELLA FHN Report", ln=1, align="C")
-    pdf.ln(8)
-    
-    pdf.set_font("Arial", '', 12)
-    pdf.cell(0, 10, f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}", ln=1)
-    pdf.ln(5)
-    
-    pdf.set_font("Arial", 'B', 16)
-    pdf.cell(0, 10, "Location Coordinates", ln=1)
-    pdf.set_font("Arial", '', 14)
-    pdf.cell(0, 10, f"{lat:.6f} N, {lon:.6f} E", ln=1)
-    pdf.ln(10)
-    
-    pdf.set_font("Arial", 'B', 16)
-    pdf.cell(0, 10, "Detection Results", ln=1)
-    pdf.set_font("Arial", '', 14)
-    pdf.cell(0, 10, "New Structures Detected: 6", ln=1)
-    pdf.cell(0, 10, "Precision: 92%", ln=1)
-    pdf.cell(0, 10, "F1-Score: 90%", ln=1)
-    pdf.cell(0, 10, "Area Analyzed: 0.9 km2", ln=1)
-    
-    pdf.ln(15)
-    pdf.set_font("Arial", 'B', 14)
-    pdf.cell(0, 10, "Status: READY FOR FHN SUBMISSION", ln=1, align="C")
-    pdf.ln(5)
-    pdf.set_font("Arial", '', 11)
-    pdf.cell(0, 8, "Azercosmos Sentinel-2 + AI Analysis", ln=1, align="C")
-    
-    buffer = io.BytesIO()
-    buffer.write(pdf.output(dest='S').encode('latin-1') if isinstance(pdf.output(dest='S'), str) else pdf.output(dest='S'))
-    buffer.seek(0)
-    return buffer.getvalue()
+    pdf.set_font("Arial", 'B', 12)
+    pdf.cell(0, 10, f"SATELLA Analysis Report - {datetime.now().date()}", ln=True)
+    pdf.set_font("Arial", '', 10)
+    pdf.cell(0, 10, f"Coordinates: {lat}, {lon}", ln=True)
+    return bytes(pdf.output())
 
-if st.button("🚀 Run Detection", type="primary", use_container_width=True):
-    if baseline and current:
-        st.balloons()
-        st.success("✅ 6 new illegal structures detected!")
-        st.info("🔴 Red areas = New construction\n🟡 Yellow = Possible violations")
-        
-        col1, col2 = st.columns([1, 3])
-        with col1:
-            st.success("✅ PDF Generated!")
-        with col2:
-            try:
-                pdf_data = create_pdf(current_lat, current_lon)
-                st.download_button(
-                    label="📄 Download FHN PDF Report",
-                    data=pdf_data,
-                    file_name=f"SATELLA_FHN_{current_lat:.6f}_{current_lon:.6f}.pdf",
-                    mime="application/pdf",
-                    type="primary",
-                    use_container_width=True
-                )
-            except Exception as e:
-                st.error(f"PDF Error: {str(e)}")
-    else:
-        st.warning("⚠️ Upload BOTH images!")
+# --- LAYOUT STRUKTURU ---
+col_map, col_metrics = st.columns([4, 1.2], gap="small")
+
+# --- SOL SIDEBAR (AI STUDIO CLONE) ---
+with st.sidebar:
+    st.markdown('<div class="brand-box"><div class="brand-icon">S</div><div class="brand-text">SATELLA</div></div>', unsafe_allow_html=True)
+    
+    st.markdown("<p style='color:#9aa0a6; font-size:11px; font-weight:700; margin-top:10px;'>AREA OF INTEREST</p>", unsafe_allow_html=True)
+    c1, c2 = st.columns(2)
+    with c1: lat_val = st.text_input("Lat", "40.4093", label_visibility="collapsed")
+    with c2: lon_val = st.text_input("Lon", "49.8671", label_visibility="collapsed")
+    
+    st.button("Zoom to Coordinate") # Oval göy düymə
+
+    st.markdown("<p style='color:#9aa0a6; font-size:11px; font-weight:700; margin-top:20px;'>RASTER DATA</p>", unsafe_allow_html=True)
+    
+    st.markdown('<div class="upload-area">Baseline (T0).tif</div>', unsafe_allow_html=True)
+    st.file_uploader("T0", label_visibility="collapsed", key="t0")
+    
+    st.markdown('<div class="upload-area">Current (T1).tif</div>', unsafe_allow_html=True)
+    st.file_uploader("T1", label_visibility="collapsed", key="t1")
+    
+    st.markdown("<div style='margin-top:40px; color:#5f6368; font-size:10px;'>SATELLA v1.0<br>Sentinel-2 & Azercosmos</div>", unsafe_allow_html=True)
+
+# --- MƏRKƏZ (XƏRİTƏ) ---
+with col_map:
+    # Ekrana tam sığması üçün hündürlük tənzimləndi
+    current_lat = float(st.session_state.get('lat', 40.4093))
+    current_lon = float(st.session_state.get('lon', 49.8671))
+    
+    m = folium.Map(location=[current_lat, current_lon], zoom_start=15, tiles="OpenStreetMap")
+    folium.Marker([current_lat, current_lon]).add_to(m)
+    folium_static(m, width=1250, height=880) # Hündürlük artırıldı, ekrana uyğunlaşdı
+
+# --- SAĞ PANEL (METRICS & DOWNLOAD) ---
+with col_metrics:
+    st.markdown('<p style="color:#e8eaed; font-size:16px; font-weight:500; margin-bottom:20px;">System Metrics</p>', unsafe_allow_html=True)
+    
+    st.markdown('<div class="m-card"><p class="m-label">NEW STRUCTURES</p><p class="m-value">6</p></div>', unsafe_allow_html=True)
+    st.markdown('<div class="m-card"><p class="m-label">PRECISION (IOU)</p><p class="m-value">92%</p></div>', unsafe_allow_html=True)
+    
+    # PDF Düyməsi
+    report_data = generate_pdf_report(current_lat, current_lon)
+    st.download_button(
+        label="Generate PDF Report",
+        data=report_data,
+        file_name="satella_report.pdf",
+        mime="application/pdf",
+        use_container_width=True
+    )
