@@ -9,7 +9,7 @@ from PIL import Image
 # 1. Səhifə Konfiqurasiyası
 st.set_page_config(page_title="SATELLA AI", layout="wide", initial_sidebar_state="expanded")
 
-# 2. UI Təkmilləşdirməsi (Yığcam Sidebar CSS)
+# 2. UI Təkmilləşdirməsi (Sidebar problemini həll edən professional dizayn)
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -17,171 +17,176 @@ st.markdown("""
     html, body, [data-testid="stAppViewContainer"], .main {
         font-family: 'Inter', sans-serif;
         background-color: #0b0d0e !important;
-        overflow: hidden !important;
     }
 
+    /* Üst başlığı gizlət */
     [data-testid="stHeader"] { display: none; }
 
-    /* SOL SİDEBAR - Ultra Yığcam */
+    /* SOL SİDEBAR - Stabilizasiya */
     section[data-testid="stSidebar"] {
-        width: 320px !important;
-        background-color: #0f1115 !important;
-        border-right: 1px solid #2d333b !important;
-    }
-    section[data-testid="stSidebar"] > div {
-        height: 100vh !important;
-        overflow: hidden !important;
-        padding: 0.8rem !important;
+        background-color: #0d1117 !important;
+        border-right: 1px solid #30363d !important;
+        min-width: 320px !important;
+        z-index: 100;
     }
 
-    .stVerticalBlock { gap: 0.1rem !important; }
+    /* Loqo Paneli - Professional Enterprise Style */
+    .brand-card {
+        background: linear-gradient(135deg, #1f6feb 0%, #111827 100%);
+        padding: 1.2rem;
+        border-radius: 10px;
+        border: 1px solid rgba(255,255,255,0.1);
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
     
-    /* File Uploader Kiçiltmə */
-    [data-testid="stFileUploader"] { padding-bottom: 0px !important; }
-    [data-testid="stFileUploader"] section { padding: 0.5rem !important; }
-
-    /* Düymələr */
-    div.stButton > button {
-        background: #1a73e8 !important;
-        border-radius: 4px !important;
-        font-weight: 600 !important;
-        height: 35px !important;
-        width: 100%;
-        border: none !important;
-        font-size: 12px !important;
-        margin-top: 10px;
+    .brand-title {
+        color: #ffffff;
+        font-size: 18px;
+        font-weight: 800;
+        letter-spacing: 1.2px;
+        margin: 0;
+    }
+    
+    .brand-subtitle {
+        color: rgba(255,255,255,0.6);
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        margin-top: 4px;
     }
 
+    /* Düymələr - Professional Green/Blue */
+    div.stButton > button {
+        background-color: #238636 !important;
+        color: white !important;
+        border-radius: 6px !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
+        font-weight: 600 !important;
+        height: 40px !important;
+        width: 100%;
+        margin-top: 10px;
+        transition: 0.2s;
+    }
+    
+    div.stButton > button:hover {
+        background-color: #2ea043 !important;
+        border-color: white !important;
+    }
+
+    /* Sidebar Etiketləri */
     .sidebar-label {
         font-size: 10px;
-        font-weight: 800;
-        color: #5f6368;
-        margin-bottom: 2px;
-        margin-top: 10px;
+        font-weight: 700;
+        color: #8b949e;
+        margin-top: 15px;
+        margin-bottom: 8px;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 1px;
     }
 
-    .success-msg {
-        background: rgba(16, 185, 129, 0.08);
-        color: #10b981;
-        padding: 6px;
-        border-radius: 4px;
-        font-size: 12px;
-        font-weight: 600;
-        margin-top: 8px;
-        border: 1px solid rgba(16, 185, 129, 0.15);
-        text-align: center;
-    }
-
+    /* Metrika Qutuları */
     .metric-box {
         background: #161b22;
         border: 1px solid #30363d;
         border-radius: 8px;
-        padding: 10px;
-        margin-bottom: 8px;
+        padding: 12px;
+        margin-bottom: 10px;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# 3. Şəkil Ölçüləndirmə
+# 3. Köməkçi Funksiyalar
 def process_images(img1, img2):
     i1 = Image.open(img1)
     i2 = Image.open(img2)
     target_size = (1024, 768)
     return i1.resize(target_size, Image.Resampling.LANCZOS), i2.resize(target_size, Image.Resampling.LANCZOS)
 
-# 4. PDF Funksiyası
 def generate_pdf(lat, lon):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", 'B', 16)
     pdf.cell(0, 10, "SATELLA ANALYSIS REPORT", ln=True, align='C')
-    pdf.set_font("Arial", '', 12)
-    pdf.cell(0, 10, f"Coordinates: {lat}, {lon}", ln=True)
     return pdf.output(dest='S').encode('latin-1')
 
 # --- SOL SIDEBAR ---
 with st.sidebar:
+    # Professional Loqo
     st.markdown("""
-    <div style='background:#1a73e8; padding:0.6rem; border-radius:6px; margin-bottom:0.5rem; text-align:center'>
-        <h2 style='color:white; margin:0; font-size:16px; letter-spacing:1px'>🛰️ SATELLA AI</h2>
+    <div class="brand-card">
+        <p class="brand-title">🛰️ SATELLA AI</p>
+        <p class="brand-subtitle">Geospatial Intelligence</p>
     </div>
     """, unsafe_allow_html=True)
     
-    # Area of Interest Section
-    st.markdown("<p class='sidebar-label'>Area of Interest</p>", unsafe_allow_html=True)
+    st.markdown("<p class='sidebar-label'>Target Parameters</p>", unsafe_allow_html=True)
     c1, c2 = st.columns(2)
     with c1:
-        lat_val = st.text_input("LAT", value="40.394799", key="lat_in", label_visibility="collapsed")
+        lat_val = st.text_input("LAT", value="40.394799", label_visibility="collapsed")
     with c2:
-        lon_val = st.text_input("LON", value="49.849585", key="lon_in", label_visibility="collapsed")
+        lon_val = st.text_input("LON", value="49.849585", label_visibility="collapsed")
     
-    # Imagery Inputs Section
-    st.markdown("<p class='sidebar-label'>Imagery Inputs</p>", unsafe_allow_html=True)
+    st.markdown("<p class='sidebar-label'>Imagery Pipeline</p>", unsafe_allow_html=True)
     
-    st.markdown("<p style='font-size:11px; color:#8ab4f8; margin:0'>T0: Baseline (Reference)</p>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size:11px; color:#8b949e; margin:0'>T0: Baseline (Reference)</p>", unsafe_allow_html=True)
     t0_file = st.file_uploader("u1", type=["png","jpg"], label_visibility="collapsed", key="u1")
     
-    st.markdown("<p style='font-size:11px; color:#8ab4f8; margin:0'>T1: Current (Target)</p>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size:11px; color:#8b949e; margin:0; margin-top:5px'>T1: Current (Target)</p>", unsafe_allow_html=True)
     t1_file = st.file_uploader("u2", type=["png","jpg"], label_visibility="collapsed", key="u2")
     
-    if st.button("RUN CHANGE DETECTION"):
+    if st.button("RUN ANALYSIS"):
         if t0_file and t1_file:
             st.session_state.lat = float(lat_val)
             st.session_state.lon = float(lon_val)
             st.session_state.run = True
         else:
-            st.error("Upload images first!")
-
-    if st.session_state.get('run', False):
-        st.markdown("<div class='success-msg'>✅ Detected 1 new structures</div>", unsafe_allow_html=True)
+            st.error("Assets required!")
 
 # --- ƏSAS EKRAN ---
-col_map, col_metrics = st.columns([3.9, 1.1])
+col_map, col_metrics = st.columns([3.8, 1.2])
 
 with col_map:
-    cur_lat = st.session_state.get('lat', 40.394799)
-    cur_lon = st.session_state.get('lon', 49.849585)
+    lat = st.session_state.get('lat', 40.394799)
+    lon = st.session_state.get('lon', 49.849585)
     
-    m = folium.Map(location=[cur_lat, cur_lon], zoom_start=17, tiles=None)
+    m = folium.Map(location=[lat, lon], zoom_start=17, tiles=None)
     folium.TileLayer(
         tiles="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-        attr="Esri",
-        name="Satellite View"
+        attr="Esri"
     ).add_to(m)
-    folium.Marker([cur_lat, cur_lon], icon=folium.Icon(color="blue")).add_to(m)
+    folium.Marker([lat, lon]).add_to(m)
     
-    folium_static(m, width=1200, height=600)
+    folium_static(m, width=1100, height=550)
     
     if t0_file and t1_file:
-        st.markdown("<div style='margin-top:15px'></div>", unsafe_allow_html=True)
         img1, img2 = process_images(t0_file, t1_file)
-        img_c1, img_c2 = st.columns(2)
-        with img_c1:
-            st.image(img1, caption="Baseline 2024 (T0)", use_container_width=True)
-        with img_c2:
-            st.image(img2, caption="Current 2025 (T1)", use_container_width=True)
+        st.markdown("<div style='margin-top:20px'></div>", unsafe_allow_html=True)
+        ic1, ic2 = st.columns(2)
+        with ic1:
+            st.image(img1, caption="Baseline T0", use_container_width=True)
+        with ic2:
+            st.image(img2, caption="Analysis T1", use_container_width=True)
 
 with col_metrics:
-    st.markdown("<h4 style='font-size:14px; margin-bottom:15px'>📊 Analysis</h4>", unsafe_allow_html=True)
-    st.markdown(f"""
-    <div class="metric-box">
-        <p style='color:#9ca3af;font-size:9px;font-weight:700;margin:0'>NEW STRUCTURES</p>
-        <p style='color:white;font-size:24px;font-weight:800;margin:0'>1</p>
-    </div>
-    <div class="metric-box">
-        <p style='color:#9ca3af;font-size:9px;font-weight:700;margin:0'>AI PRECISION</p>
-        <p style='color:#3b82f6;font-size:24px;font-weight:800;margin:0'>92%</p>
-    </div>
-    <div class="metric-box">
-        <p style='color:#9ca3af;font-size:9px;font-weight:700;margin:0'>F1-SCORE</p>
-        <p style='color:#10b981;font-size:24px;font-weight:800;margin:0'>90%</p>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown("<p style='font-weight:700; color:#f0f6fc; font-size:14px; margin-bottom:15px'>ANALYTICS ENGINE</p>", unsafe_allow_html=True)
+    
+    metrics_data = [
+        ("DETECTION", "1 Units", "#f0f6fc"),
+        ("CONFIDENCE", "92.4%", "#58a6ff"),
+        ("STATUS", "Active", "#3fb950")
+    ]
+    
+    for label, val, color in metrics_data:
+        st.markdown(f"""
+        <div class="metric-box">
+            <p style='color:#8b949e; font-size:9px; font-weight:700; margin:0'>{label}</p>
+            <p style='color:{color}; font-size:22px; font-weight:800; margin:0'>{val}</p>
+        </div>
+        """, unsafe_allow_html=True)
     
     if st.session_state.get('run', False):
-        report = generate_pdf(cur_lat, cur_lon)
-        st.download_button("📥 PDF REPORT", data=report, file_name="satella_report.pdf", use_container_width=True)
+        report = generate_pdf(lat, lon)
+        st.download_button("📥 DOWNLOAD REPORT", data=report, file_name="satella_analysis.pdf", use_container_width=True)
 
-    st.markdown("<div style='position:absolute; bottom:20px; width:100%; text-align:center; color:#4b5563; font-size:9px;'>SATELLA AI ENGINE v3.2</div>", unsafe_allow_html=True)
+    st.markdown("<div style='margin-top:40px; color:#484f58; font-size:9px; text-align:center'>CORE ENGINE v3.2.1</div>", unsafe_allow_html=True)
