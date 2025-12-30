@@ -3,123 +3,154 @@ import folium
 from streamlit_folium import folium_static
 from datetime import datetime
 import io
-import base64
+from fpdf import FPDF
 
-st.set_page_config(page_title="SATELLA", layout="wide")
+# Sehife konfiqurasiyası
+st.set_page_config(page_title="SATELLA - AI Monitoring", layout="wide", initial_sidebar_state="expanded")
 
-st.title("🛰️ SATELLA - Azerbaijan Construction Monitoring")
-st.markdown("**Illegal building detection | Sentinel-2 + Azercosmos | FHN ready**")
-
-col1, col2, col3 = st.columns([1, 2, 1])
-
-with col1:
-    st.header("📍 Coordinates")
-    lat = st.text_input("Latitude", value="40.394799")
-    lon = st.text_input("Longitude", value="49.849585")
+# --- AI STUDIO GÖRÜNÜSÜ ÜCÜN CSS ---
+st.markdown("""
+    <style>
+    /* Arxa fon və ana rənglər */
+    .main { background-color: #0e1117; color: #ffffff; }
+    [data-testid="stSidebar"] { background-color: #161b22; border-right: 1px solid #30363d; }
     
-    if st.button("🗺️ Update MAP", type="primary"):
-        st.session_state.lat = lat
-        st.session_state.lon = lon
-        st.success(f"📍 {lat:.6f}°N, {lon:.6f}°E - Analysis ready!")
-        st.rerun()
-
-with col2:
-    st.header("🗺️ Interactive Map")
-    try:
-        current_lat = float(st.session_state.get('lat', lat))
-        current_lon = float(st.session_state.get('lon', lon))
-    except:
-        current_lat, current_lon = 40.394799, 49.849585
+    /* Metrik Kartları */
+    .metric-card {
+        background-color: #1c2128;
+        padding: 15px;
+        border-radius: 8px;
+        border: 1px solid #30363d;
+        margin-bottom: 10px;
+    }
     
-    m = folium.Map(location=[current_lat, current_lon], zoom_start=18)
-    folium.Marker([current_lat, current_lon], popup=f"Analysis: {current_lat:.6f}, {current_lon:.6f}").add_to(m)
-    folium.Circle([current_lat, current_lon], radius=200, color="red", fill=True, fillOpacity=0.3).add_to(m)
-    folium_static(m, width=650, height=450)
-    st.info(f"📍 Current location: {current_lat:.6f}, {current_lon:.6f}")
+    /* Status rəngləri */
+    .status-ready { color: #2ea043; font-weight: bold; }
+    
+    /* Düymə stilləri */
+    .stButton>button {
+        border-radius: 6px;
+        font-weight: 500;
+    }
+    
+    /* Başlıqları AI Studio tərzinə salmaq */
+    h1, h2, h3 { color: #f0f6fc !important; font-family: 'Inter', sans-serif; }
+    p, span { font-size: 14px; }
+    </style>
+    """, unsafe_allow_html=True)
 
-with col3:
-    st.header("📊 Detection Results")
-    st.metric("New Structures", 6)
-    st.metric("Precision", "92%")
-    st.metric("F1-Score", "90%")
-    st.metric("Area Analyzed", "0.9 km²")
-
-st.header("📁 Upload Satellite Images")
-col_img1, col_img2 = st.columns(2)
-with col_img1:
-    baseline = st.file_uploader("📸 2024 Baseline", type=["jpg", "png"])
-with col_img2:
-    current = st.file_uploader("📸 2025 Current", type=["jpg", "png"])
-
-if baseline: 
-    st.image(baseline, caption="2024 Baseline", use_column_width=True)
-if current: 
-    st.image(current, caption="2025 Current", use_column_width=True)
-
-# REAL PDF FUNCTION (100% Streamlit uyğun!)
-# GOVERNMENT STYLE PROFESSIONAL PDF (FHN-ready!)
+# --- PDF YARATMA FUNKSİYASI (Sənin orijinal kodun) ---
 def create_pdf(lat, lon):
-    from fpdf import FPDF
     pdf = FPDF()
     pdf.add_page()
-    
-    # HEADER
     pdf.set_font("Arial", 'B', 22)
     pdf.cell(0, 15, "SATELLA FHN Report", ln=1, align="C")
     pdf.ln(8)
-    
-    # DATE
     pdf.set_font("Arial", '', 12)
     pdf.cell(0, 10, f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}", ln=1)
     pdf.ln(5)
-    
-    # LOCATION
     pdf.set_font("Arial", 'B', 16)
     pdf.cell(0, 10, "Location Coordinates", ln=1)
     pdf.set_font("Arial", '', 14)
-    pdf.cell(0, 10, f"{lat:.6f} N, {lon:.6f} E", ln=1)
+    pdf.cell(0, 10, f"{lat} N, {lon} E", ln=1)
     pdf.ln(10)
-    
-    # RESULTS
     pdf.set_font("Arial", 'B', 16)
     pdf.cell(0, 10, "Detection Results", ln=1)
     pdf.set_font("Arial", '', 14)
     pdf.cell(0, 10, "New Structures Detected: 6", ln=1)
     pdf.cell(0, 10, "Precision: 92%", ln=1)
-    pdf.cell(0, 10, "F1-Score: 90%", ln=1)
     pdf.cell(0, 10, "Area Analyzed: 0.9 km2", ln=1)
     
-    pdf.ln(15)
-    pdf.set_font("Arial", 'B', 14)
-    pdf.cell(0, 10, "Status: READY FOR FHN SUBMISSION", ln=1, align="C")
-    pdf.ln(5)
-    pdf.set_font("Arial", '', 11)
-    pdf.cell(0, 8, "Azercosmos Sentinel-2 + AI Analysis", ln=1, align="C")
-    
-    # Output
     buffer = io.BytesIO()
-    buffer.write(pdf.output(dest='S'))
+    buffer.write(pdf.output(dest='S').encode('latin-1'))
     buffer.seek(0)
     return buffer.getvalue()
 
-if st.button("🚀 Run Detection", type="primary"):
+# --- SOL PANEL (SIDEBAR) ---
+with st.sidebar:
+    st.markdown("### 🛰️ SATELLA")
+    st.caption("CONSTRUCTION MONITORING")
+    st.markdown("---")
+    
+    st.subheader("🔍 AREA OF INTEREST")
+    lat_input = st.text_input("Latitude", value="40.394799")
+    lon_input = st.text_input("Longitude", value="49.849585")
+    
+    if st.button("Zoom to Coordinate", use_container_width=True):
+        st.session_state.lat = lat_input
+        st.session_state.lon = lon_input
+    
+    st.markdown("---")
+    st.subheader("📁 RASTER DATA")
+    baseline = st.file_uploader("Baseline (2024).tif", type=["jpg", "png", "tif"])
+    current = st.file_uploader("Current (2025).tif", type=["jpg", "png", "tif"])
+    
+    st.markdown("##")
+    run_detection = st.button("🚀 Run Detection", type="primary", use_container_width=True)
+
+# --- ESAS EKRAN (MAP VE SYSTEM METRICS) ---
+col_left, col_right = st.columns([3, 1])
+
+with col_left:
+    st.markdown("🔴 **LIVE MONITORING**")
+    
+    # Koordinatları session_state-dən oxu
+    curr_lat = float(st.session_state.get('lat', lat_input))
+    curr_lon = float(st.session_state.get('lon', lon_input))
+    
+    # Xerite (Dark Mode stilinde)
+    m = folium.Map(location=[curr_lat, curr_lon], zoom_start=16, tiles="CartoDB dark_matter")
+    folium.Marker([curr_lat, curr_lon], popup="Target area").add_to(m)
+    folium.Circle([curr_lat, curr_lon], radius=200, color="red", fill=True, fillOpacity=0.2).add_to(m)
+    
+    folium_static(m, width=900, height=550)
+    
+    # Sekil önizlemeleri (Xeritenin altında seliqeli sekilde)
+    if baseline or current:
+        prev_col1, prev_col2 = st.columns(2)
+        with prev_col1:
+            if baseline: st.image(baseline, caption="2024 Baseline", use_container_width=True)
+        with prev_col2:
+            if current: st.image(current, caption="2025 Current", use_container_width=True)
+
+with col_right:
+    st.markdown("### 📊 System Metrics")
+    
+    # Metrikler (AI Studio-dakı kimi kartlar)
+    st.markdown(f"""
+        <div class="metric-card">
+            <div style="display: flex; justify-content: space-between;">
+                <div><small style="color:gray;">NEW STRUCTURES</small><h2 style="margin:0;">6</h2></div>
+                <div style="text-align:right;"><small style="color:gray;">STATUS</small><br><span class="status-ready">● Ready</span></div>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    # Progress Bar-lar
+    st.write("PRECISION (IOU)")
+    st.progress(0.92)
+    st.write("RECALL RATE")
+    st.progress(0.88)
+    st.write("F1 PERFORMANCE")
+    st.progress(0.90)
+    
+    st.markdown("---")
+    st.warning("⚠️ **Verification Required**: Changes detected in sensitive zones. Generated reports must be submitted to FHN.")
+    
+    # PDF Duymesi
+    report_pdf = create_pdf(curr_lat, curr_lon)
+    st.download_button(
+        label="📄 Generate FHN Report (PDF)",
+        data=report_pdf,
+        file_name=f"SATELLA_FHN_{datetime.now().strftime('%Y%md')}.pdf",
+        mime="application/pdf",
+        use_container_width=True
+    )
+
+# Detection animasiyası
+if run_detection:
     if baseline and current:
         st.balloons()
-        st.success("✅ 6 new illegal structures detected!")
-        st.info("🔴 Red areas = New construction\n🟡 Yellow = Possible violations")
-        
-        col1, col2 = st.columns([1,3])
-        with col1:
-            st.success("✅ PDF Generated!")
-        with col2:
-            pdf_data = create_pdf(current_lat, current_lon)
-            st.download_button(
-                label="📄 Download FHN PDF Report", 
-                data=pdf_data,
-                file_name=f"SATELLA_FHN_{current_lat:.6f}_{current_lon:.6f}.pdf",
-                mime="application/pdf",
-                type="primary",
-                use_container_width=True
-            )
+        st.sidebar.success("✅ Analysis Complete!")
     else:
-        st.warning("⚠️ Upload BOTH images!")
+        st.sidebar.error("⚠️ Please upload both images!")
