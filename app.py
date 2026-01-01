@@ -116,10 +116,11 @@ with col_map:
     
     # Xəritə
     m = folium.Map(location=[lat, lon], zoom_start=18)
-    folium.TileLayer(
-        tiles="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-        attr="Esri"
-    ).add_to(m)
+folium.TileLayer(
+    tiles="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    attr="Esri",
+    name="Esri World Imagery"
+).add_to(m)
     folium.Marker([lat, lon], tooltip="Target").add_to(m)
     folium.Circle([lat, lon], radius=150, color='red', fill=True, fill_opacity=0.2).add_to(m)
     
