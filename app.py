@@ -3,7 +3,7 @@ import folium
 from streamlit_folium import folium_static
 from datetime import datetime
 from fpdf import FPDF
-from PIL import Image
+import io
 
 # 1. SAYFA AYARLARI
 st.set_page_config(
@@ -28,191 +28,255 @@ if 'project_name' not in st.session_state:
 if 'project_id' not in st.session_state:
     st.session_state.project_id = "AZ-BU-2025-09"
 
-# 3. CSS AYARLARI (YENİ TASARIM)
+# 3. MINIMAL & SCI-FI CSS
 st.markdown("""
 <style>
-    /* Ana fon */
-    .stApp { background-color: #0b0d0e; }
+    * { font-family: 'Courier New', monospace; }
     
-    /* SIDEBAR STİLİ */
+    .stApp { 
+        background-color: #000814;
+        color: #e0e0e0;
+    }
+    
+    /* SIDEBAR */
     [data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #0f1117 0%, #161b22 100%) !important;
-        border-right: 1px solid #30363d !important;
+        background-color: #0a0e27 !important;
+        border-right: 1px solid #1a4d6d !important;
     }
-    
-    [data-testid="stSidebar"] * { color: white !important; }
 
-    /* HEADER LOGO BÖLÜMÜ */
-    .sidebar-header {
-        background: linear-gradient(135deg, #1f6feb 0%, #0d4fb8 100%);
+    /* MAIN CONTENT */
+    [data-testid="stAppViewContainer"] {
+        background-color: #000814;
+    }
+
+    /* TEXT COLOR */
+    [data-testid="stSidebar"] * { 
+        color: #c0c0c0 !important;
+    }
+
+    /* === HEADER === */
+    .header-section {
+        background: linear-gradient(135deg, #0d2b45 0%, #051a2e 100%);
+        border: 1px solid #1a4d6d;
+        border-radius: 2px;
         padding: 20px;
-        border-radius: 12px;
         margin-bottom: 25px;
-        border: 1px solid #388bfd;
-        text-align: center;
+        position: relative;
+        overflow: hidden;
     }
 
-    .sidebar-header h1 {
+    .header-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, #00d4ff, transparent);
+    }
+
+    .header-logo {
+        font-size: 24px;
+        font-weight: bold;
+        letter-spacing: 3px;
+        color: #00d4ff;
         margin: 0;
-        font-size: 28px;
-        font-weight: 800;
-        letter-spacing: 1px;
-    }
-
-    .sidebar-header p {
-        margin: 5px 0 0 0;
-        font-size: 9px;
-        letter-spacing: 2px;
-        opacity: 0.9;
         text-transform: uppercase;
     }
 
-    .live-badge {
-        display: inline-block;
-        background: #28a745;
-        color: white;
-        padding: 4px 8px;
-        border-radius: 4px;
+    .header-subtitle {
         font-size: 8px;
-        margin-top: 10px;
-        font-weight: bold;
+        letter-spacing: 2px;
+        color: #7a8fa0;
+        margin: 8px 0 0 0;
+        text-transform: uppercase;
     }
 
-    /* PROJECT CARD */
-    .project-card {
-        background: #161b22;
-        border: 1px solid #30363d;
-        border-left: 3px solid #1f6feb;
-        padding: 15px;
-        border-radius: 8px;
+    .live-indicator {
+        display: inline-block;
+        margin-top: 10px;
+        font-size: 9px;
+        color: #00ff41;
+        letter-spacing: 1px;
+    }
+
+    .live-indicator::before {
+        content: '●';
+        margin-right: 5px;
+        animation: blink 1.5s infinite;
+    }
+
+    @keyframes blink {
+        0%, 49%, 100% { opacity: 1; }
+        50%, 99% { opacity: 0.3; }
+    }
+
+    /* === PROJECT CARD === */
+    .project-section {
+        background: #0a0e27;
+        border: 1px solid #1a4d6d;
+        border-radius: 2px;
+        padding: 12px;
         margin-bottom: 20px;
     }
 
-    .project-card h3 {
-        margin: 0 0 5px 0;
-        font-size: 14px;
-        color: white;
-    }
-
-    .project-card p {
-        margin: 0;
-        font-size: 11px;
-        color: #8b949e;
-    }
-
-    /* SECTION BAŞLIKLARI */
-    .section-title {
-        font-size: 12px;
-        font-weight: 700;
-        color: #58a6ff;
-        text-transform: uppercase;
+    .project-title {
+        font-size: 13px;
+        color: #00d4ff;
+        margin: 0 0 8px 0;
         letter-spacing: 1px;
-        margin: 20px 0 12px 0;
-        border-bottom: 1px solid #30363d;
-        padding-bottom: 8px;
-    }
-
-    /* INPUT STYLES */
-    [data-testid="stSidebar"] .stTextInput input {
-        background-color: #0d1117 !important;
-        border: 1px solid #30363d !important;
-        color: #e6edf3 !important;
-        border-radius: 6px !important;
-        padding: 8px 12px !important;
-        font-size: 13px !important;
-    }
-
-    [data-testid="stSidebar"] .stTextInput input:focus {
-        border-color: #1f6feb !important;
-        box-shadow: 0 0 0 3px rgba(31, 111, 235, 0.1) !important;
-    }
-
-    /* BUTTON STYLES */
-    [data-testid="stSidebar"] .stButton button {
-        background: linear-gradient(135deg, #1f6feb 0%, #0d4fb8 100%) !important;
-        color: white !important;
-        border: 1px solid #388bfd !important;
-        border-radius: 6px !important;
-        font-weight: 600 !important;
-        padding: 10px !important;
-        transition: all 0.3s !important;
-    }
-
-    [data-testid="stSidebar"] .stButton button:hover {
-        background: linear-gradient(135deg, #0d4fb8 0%, #1f6feb 100%) !important;
-        transform: translateY(-2px) !important;
-    }
-
-    /* FILE UPLOADER */
-    [data-testid="stSidebar"] .stFileUploader {
-        margin: 10px 0;
-    }
-
-    .upload-box {
-        background: #0d1117;
-        border: 2px dashed #30363d;
-        border-radius: 8px;
-        padding: 15px;
-        text-align: center;
-        margin: 8px 0;
-        transition: all 0.3s;
-    }
-
-    .upload-box:hover {
-        border-color: #1f6feb;
-        background: #161b22;
-    }
-
-    /* ICON STYLES */
-    .icon-badge {
-        display: inline-block;
-        width: 32px;
-        height: 32px;
-        background: #1f6feb;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 16px;
-        margin-right: 10px;
-    }
-
-    /* KOORDINAT INPUT WRAPPER */
-    .coord-wrapper {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-        margin: 10px 0;
-    }
-
-    /* METRIKA KARTLARI */
-    .metric-card {
-        background: #161b22;
-        border: 1px solid #30363d;
-        border-radius: 8px;
-        padding: 12px;
-        margin-bottom: 10px;
-    }
-
-    .metric-label {
-        color: #8b949e;
-        font-size: 11px;
-        margin: 0;
         text-transform: uppercase;
     }
 
-    .metric-value {
-        color: #58a6ff;
-        font-size: 24px;
+    .project-name {
+        font-size: 13px;
+        color: #e0e0e0;
+        margin: 0;
         font-weight: bold;
+    }
+
+    .project-id {
+        font-size: 9px;
+        color: #7a8fa0;
         margin: 5px 0 0 0;
     }
 
-    /* DIVIDER */
+    /* === SECTION TITLE === */
+    .section-title {
+        font-size: 9px;
+        color: #7a8fa0;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        margin: 18px 0 10px 0;
+        padding-bottom: 6px;
+        border-bottom: 1px solid #1a4d6d;
+    }
+
+    .section-title-icon {
+        color: #00d4ff;
+        margin-right: 6px;
+    }
+
+    /* === INPUTS === */
+    [data-testid="stSidebar"] .stTextInput input {
+        background-color: #051a2e !important;
+        border: 1px solid #1a4d6d !important;
+        color: #e0e0e0 !important;
+        border-radius: 1px !important;
+        padding: 8px !important;
+        font-size: 11px !important;
+        font-family: 'Courier New', monospace !important;
+    }
+
+    [data-testid="stSidebar"] .stTextInput input:focus {
+        border-color: #00d4ff !important;
+        box-shadow: 0 0 8px rgba(0, 212, 255, 0.1) !important;
+    }
+
+    /* === BUTTONS === */
+    [data-testid="stSidebar"] .stButton button {
+        background-color: #0d3f5a !important;
+        color: #00d4ff !important;
+        border: 1px solid #1a7a9f !important;
+        border-radius: 1px !important;
+        padding: 10px !important;
+        font-size: 10px !important;
+        font-weight: bold !important;
+        letter-spacing: 1px !important;
+        text-transform: uppercase !important;
+        transition: all 0.2s !important;
+    }
+
+    [data-testid="stSidebar"] .stButton button:hover {
+        background-color: #0f5a7f !important;
+        border-color: #00d4ff !important;
+        box-shadow: 0 0 12px rgba(0, 212, 255, 0.2) !important;
+    }
+
+    /* === FILE UPLOADER === */
+    [data-testid="stSidebar"] .stFileUploader {
+        margin: 8px 0;
+    }
+
+    .upload-box-label {
+        font-size: 11px;
+        color: #e0e0e0;
+        margin-bottom: 4px;
+        font-weight: bold;
+    }
+
+    .upload-box-info {
+        font-size: 8px;
+        color: #7a8fa0;
+        margin-bottom: 6px;
+    }
+
+    /* === DIVIDER === */
     .divider {
         border: none;
-        border-top: 1px solid #30363d;
+        border-top: 1px solid #1a4d6d;
         margin: 15px 0;
+    }
+
+    /* === STATS === */
+    .stat-box {
+        background: #0a0e27;
+        border: 1px solid #1a4d6d;
+        border-radius: 1px;
+        padding: 10px;
+        margin-bottom: 8px;
+    }
+
+    .stat-label {
+        font-size: 8px;
+        color: #7a8fa0;
+        margin: 0;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .stat-value {
+        font-size: 18px;
+        color: #00d4ff;
+        margin: 6px 0 0 0;
+        font-weight: bold;
+    }
+
+    /* === MAIN CONTENT === */
+    .main-title {
+        font-size: 11px;
+        color: #7a8fa0;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin: 0 0 12px 0;
+    }
+
+    .data-card {
+        background: #0a0e27;
+        border: 1px solid #1a4d6d;
+        border-radius: 2px;
+        padding: 15px;
+        margin-bottom: 12px;
+    }
+
+    .data-card-title {
+        font-size: 11px;
+        color: #00d4ff;
+        margin: 0 0 10px 0;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .data-card-value {
+        font-size: 14px;
+        color: #e0e0e0;
+        margin: 0;
+    }
+
+    .data-card-secondary {
+        font-size: 10px;
+        color: #00ff41;
+        margin: 8px 0 0 0;
     }
 
 </style>
@@ -222,75 +286,67 @@ st.markdown("""
 def create_report(lat, lon):
     pdf = FPDF()
     pdf.add_page()
-    pdf.set_font("Arial", 'B', 16)
-    pdf.cell(0, 15, "SATELLA AI - MONITORING REPORT", ln=True, align='C')
-    pdf.ln(10)
-    pdf.set_font("Arial", '', 12)
-    pdf.cell(0, 10, f"Project: {st.session_state.project_name}", ln=True)
-    pdf.cell(0, 10, f"Location: {lat}, {lon}", ln=True)
-    pdf.cell(0, 10, f"Analysis Time: {datetime.now().strftime('%Y-%m-%d %H:%M')}", ln=True)
+    pdf.set_font("Arial", 'B', 14)
+    pdf.cell(0, 12, "SATELLA AI - ANALYSIS REPORT", ln=True, align='C')
+    pdf.ln(8)
+    pdf.set_font("Arial", '', 10)
+    pdf.cell(0, 8, f"Project: {st.session_state.project_name}", ln=True)
+    pdf.cell(0, 8, f"Coordinates: {lat}, {lon}", ln=True)
+    pdf.cell(0, 8, f"Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}", ln=True)
     return pdf.output(dest='S').encode('latin-1', 'ignore')
 
-# --- 🛰️ SOL PANEL (SIDEBAR) ---
+# --- SOL PANEL ---
 with st.sidebar:
-    # HEADER LOGO
+    # HEADER
     st.markdown("""
-    <div class="sidebar-header">
-        <h1>🛰️ SATELLA</h1>
-        <p>GEO-INTELLIGENCE PLATFORM</p>
-        <div class="live-badge">● LIVE</div>
+    <div class="header-section">
+        <div class="header-logo">🛰️ SATELLA</div>
+        <div class="header-subtitle">GEO-INTELLIGENCE PLATFORM</div>
+        <div class="live-indicator">LIVE</div>
     </div>
     """, unsafe_allow_html=True)
 
-    # CURRENT PROJECT
-    st.markdown('<div class="section-title">▶ CURRENT PROJECT</div>', unsafe_allow_html=True)
+    # PROJECT
+    st.markdown('<div class="section-title"><span class="section-title-icon">▶</span>CURRENT PROJECT</div>', unsafe_allow_html=True)
     st.markdown(f"""
-    <div class="project-card">
-        <h3>{st.session_state.project_name}</h3>
-        <p>ID: {st.session_state.project_id}</p>
+    <div class="project-section">
+        <div class="project-name">{st.session_state.project_name}</div>
+        <div class="project-id">ID: {st.session_state.project_id}</div>
     </div>
     """, unsafe_allow_html=True)
 
-    # TARGET COORDINATES
-    st.markdown('<div class="section-title">🎯 TARGET COORDINATES</div>', unsafe_allow_html=True)
+    # COORDINATES
+    st.markdown('<div class="section-title"><span class="section-title-icon">🎯</span>TARGET COORDINATES</div>', unsafe_allow_html=True)
     
     col1, col2 = st.columns(2)
     with col1:
-        lat_val = st.text_input(
-            "LATITUDE",
-            value=str(st.session_state.lat),
-            key="side_lat",
-            label_visibility="collapsed"
-        )
+        st.markdown('<div style="font-size: 7px; color: #7a8fa0; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">LATITUDE</div>', unsafe_allow_html=True)
+        lat_val = st.text_input("LAT", value=str(st.session_state.lat), key="side_lat", label_visibility="collapsed")
     with col2:
-        lon_val = st.text_input(
-            "LONGITUDE",
-            value=str(st.session_state.lon),
-            key="side_lon",
-            label_visibility="collapsed"
-        )
+        st.markdown('<div style="font-size: 7px; color: #7a8fa0; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">LONGITUDE</div>', unsafe_allow_html=True)
+        lon_val = st.text_input("LON", value=str(st.session_state.lon), key="side_lon", label_visibility="collapsed")
     
-    if st.button("🔄 Relocate Scanner", use_container_width=True):
+    st.button("🔄 Relocate Scanner", use_container_width=True, key="relocate_btn", help="Update target area")
+    if st.session_state.get('relocate_btn'):
         try:
             st.session_state.lat = float(lat_val)
             st.session_state.lon = float(lon_val)
-            st.success("📍 Coordinates updated!")
             st.rerun()
-        except ValueError:
+        except:
             st.error("Invalid coordinates")
 
     st.markdown('<hr class="divider">', unsafe_allow_html=True)
 
     # INGEST ENGINE
-    st.markdown('<div class="section-title">⚙️ INGEST ENGINE</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-title"><span class="section-title-icon">⚙️</span>INGEST ENGINE</div>', unsafe_allow_html=True)
     
-    st.markdown("**Baseline Imagery (T0)**")
-    st.markdown("Sentinel-2 L2A")
-    t0 = st.file_uploader("Upload T0 Image", type=["png", "jpg"], key="up_t0", label_visibility="collapsed")
+    st.markdown('<div class="upload-box-label">📦 Baseline Imagery (T0)</div>', unsafe_allow_html=True)
+    st.markdown('<div class="upload-box-info">Sentinel-2 L2A</div>', unsafe_allow_html=True)
+    t0 = st.file_uploader("Upload baseline", type=["png", "jpg"], key="up_t0", label_visibility="collapsed")
     
-    st.markdown("**Target Imagery (T1)**")
-    st.markdown("Sentinel-2 L2A")
-    t1 = st.file_uploader("Upload T1 Image", type=["png", "jpg"], key="up_t1", label_visibility="collapsed")
+    st.markdown('<div class="upload-box-label">▶️ Target Imagery (T1)</div>', unsafe_allow_html=True)
+    st.markdown('<div class="upload-box-info">Sentinel-2 L2A</div>', unsafe_allow_html=True)
+    t1 = st.file_uploader("Upload target", type=["png", "jpg"], key="up_t1", label_visibility="collapsed")
 
     if t0:
         st.session_state.t0 = t0
@@ -304,31 +360,30 @@ with st.sidebar:
         if st.session_state.t0 and st.session_state.t1:
             st.session_state.is_analysed = True
             st.balloons()
-            st.success("✓ Analysis Complete")
             st.rerun()
         else:
-            st.error("⚠️ Upload both images first")
+            st.error("Upload both imagery files")
 
     st.markdown('<hr class="divider">', unsafe_allow_html=True)
 
-    # QUICK STATS
-    st.markdown('<div class="section-title">📊 ANALYSIS STATS</div>', unsafe_allow_html=True)
+    # STATS
+    st.markdown('<div class="section-title"><span class="section-title-icon">📊</span>ANALYSIS STATS</div>', unsafe_allow_html=True)
     
     detected = "1" if st.session_state.is_analysed else "0"
     
     st.markdown(f"""
-    <div class="metric-card">
-        <p class="metric-label">DETECTED OBJECTS</p>
-        <p class="metric-value">{detected}</p>
+    <div class="stat-box">
+        <p class="stat-label">Structural Detections</p>
+        <p class="stat-value">{detected}</p>
     </div>
-    <div class="metric-card">
-        <p class="metric-label">AI CONFIDENCE</p>
-        <p class="metric-value">92.4%</p>
+    <div class="stat-box">
+        <p class="stat-label">AI Confidence</p>
+        <p class="stat-value">92.4%</p>
     </div>
     """, unsafe_allow_html=True)
 
-# --- 🗺️ ƏSAS EKRAN LAYOUT ---
-col_map, col_data = st.columns([3.5, 1.2])
+# --- MAIN CONTENT ---
+col_map, col_right = st.columns([3, 1.3])
 
 with col_map:
     lat = st.session_state.lat
@@ -337,43 +392,55 @@ with col_map:
     m = folium.Map(location=[lat, lon], zoom_start=18)
     folium.TileLayer(
         tiles="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-        attr="Esri Satellite",
-        name="ArcGIS"
+        attr="Esri",
+        name="Satellite"
     ).add_to(m)
-    folium.Marker([lat, lon], tooltip="Current Target Area").add_to(m)
+    folium.Marker([lat, lon], tooltip="Target Area", popup="Current Scan Zone").add_to(m)
     
-    folium_static(m, width=1000, height=530)
+    folium_static(m, width=1000, height=550)
     
     if st.session_state.t0 and st.session_state.t1:
-        st.markdown("### 🔍 Side-by-Side Analysis")
+        st.markdown('<div class="main-title">🔍 Imagery Comparison</div>', unsafe_allow_html=True)
         c1, c2 = st.columns(2)
-        c1.image(st.session_state.t0, caption="2024 (T0)", use_container_width=True)
-        c2.image(st.session_state.t1, caption="2025 (T1)", use_container_width=True)
+        with c1:
+            st.image(st.session_state.t0, caption="REF: 2024", use_container_width=True)
+        with c2:
+            st.image(st.session_state.t1, caption="TARGET: 2025", use_container_width=True)
 
-with col_data:
-    st.markdown("### 📊 Metrics")
+with col_right:
+    st.markdown('<div class="main-title">Detection Layer</div>', unsafe_allow_html=True)
+    
     detected = "1" if st.session_state.is_analysed else "0"
     
     st.markdown(f"""
-    <div class="metric-card">
-        <p style="color:#8b949e; font-size:12px; margin:0;">NEW BUILDINGS</p>
-        <p style="color:white; font-size:26px; font-weight:bold; margin:0;">{detected}</p>
+    <div class="data-card">
+        <div class="data-card-title">Structural Detections</div>
+        <div class="data-card-value">{detected}</div>
     </div>
-    <div class="metric-card">
-        <p style="color:#8b949e; font-size:12px; margin:0;">CONFIDENCE</p>
-        <p style="color:#58a6ff; font-size:26px; font-weight:bold; margin:0;">92.4%</p>
+    <div class="data-card">
+        <div class="data-card-title">AI Confidence</div>
+        <div class="data-card-value">92.4%</div>
+        <div class="data-card-secondary">Status: OPTIMAL</div>
     </div>
     """, unsafe_allow_html=True)
     
     if st.session_state.is_analysed:
-        st.info("✓ Analysis Ready")
+        st.markdown('<br>', unsafe_allow_html=True)
+        st.markdown('<div style="background: #0a0e27; border: 1px solid #1a4d6d; padding: 12px; border-radius: 2px;"><div style="font-size: 8px; color: #7a8fa0; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Export Protocol</div>', unsafe_allow_html=True)
         pdf_report = create_report(lat, lon)
         st.download_button(
-            label="📥 DOWNLOAD REPORT",
+            label="⬇️ Download Report",
             data=pdf_report,
-            file_name=f"Satella_Report_{datetime.now().strftime('%Y%m%d')}.pdf",
+            file_name=f"SATELLA_AZ-BU_{datetime.now().strftime('%Y%m%d')}.pdf",
             mime="application/pdf",
             use_container_width=True
         )
+        st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown("<br><hr><center style='color:#484f58; font-size:11px;'>SATELLA AI v3.3 | Professional Geospatial System</center>", unsafe_allow_html=True)
+# FOOTER
+st.markdown("""
+<div style='text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #1a4d6d;'>
+<div style='font-size: 8px; color: #7a8fa0; letter-spacing: 1px;'>SATELLA AI v4.0 | GEOSPATIAL MONITORING SYSTEM</div>
+<div style='font-size: 7px; color: #2a5a7a; margin-top: 8px;'>SYSTEM ONLINE • AZEROSMOS LINK STEADY • ALL SYSTEMS NOMINAL</div>
+</div>
+""", unsafe_allow_html=True)
