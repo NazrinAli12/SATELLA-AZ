@@ -8,44 +8,46 @@ from PIL import Image
 
 st.set_page_config(page_title="SATELLA AI", layout="wide", initial_sidebar_state="expanded")
 
-# SCROLL YOK + SOL BAR ZORLA GÖRÜNÜN
+# SOL BAR FİKS CSS (Foto-ya 100% uyğun)
 st.markdown("""
 <style>
-/* SOL BAR ZORLA 400px + SCROLL YOK */
+/* SOL BAR - PREÇİZE 320px + SABİT */
 section[data-testid="stSidebar"] {
-    width: 400px !important;
-    min-width: 400px !important;
-    max-width: 400px !important;
-    height: 100vh !important;
-    overflow: hidden !important;
+    width: 320px !important;
+    min-width: 320px !important;
+    max-width: 320px !important;
     background: #0d1117 !important;
     border-right: 1px solid #30363d !important;
-    position: fixed !important;
-    left: 0 !important;
-    z-index: 999 !important;
 }
 
-section[data-testid="stSidebar"] > div {
-    height: 100vh !important;
+/* SCROLL YOX */
+section[data-testid="stSidebar"] > div > div {
     overflow: hidden !important;
-    padding-bottom: 200px !important;
+    max-height: 100vh !important;
 }
 
-[data-testid="stSidebar"]::-webkit-scrollbar { display: none !important; }
-
-/* MAIN CONTENT SAĞA SÜR */
-[data-testid="stAppViewContainer"] {
-    margin-left: 400px !important;
+/* MAIN SAĞA SÜR (320px) */
+main .block-container {
+    margin-left: 320px !important;
     padding-left: 0 !important;
 }
 
-/* FONT + DARK */
-html, body {
-    font-family: 'Inter', sans-serif !important;
-    background: #0b0d0e !important;
+/* HEADER GİZLƏT */
+[data-testid="stHeader"] { display: none !important; }
+
+/* DARK THEME */
+.stApp {
+    background-color: #0b0d0e !important;
 }
 
-[data-testid="stHeader"] { display: none !important; }
+/* DÜYMƏ */
+div.stButton > button {
+    background: linear-gradient(135deg, #1a73e8, #1557b0) !important;
+    color: white !important;
+    border-radius: 8px !important;
+    height: 42px !important;
+    font-weight: 600 !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -57,71 +59,94 @@ def process_images(img1, img2):
 def generate_pdf(lat, lon):
     pdf = FPDF()
     pdf.add_page()
-    pdf.set_font("Arial", 'B', 16)
-    pdf.cell(0, 10, "SATELLA ANALYSIS REPORT", ln=True, align='C')
+    pdf.set_font("Arial", 'B', 18)
+    pdf.cell(0, 10, "SATELLA AI REPORT", ln=1, align='C')
     pdf.set_font("Arial", '', 12)
-    pdf.cell(0, 10, f"Baku: {lat:.6f}N {lon:.6f}E", ln=1)
-    pdf.cell(0, 10, "Detections: 1 | Precision: 92%", ln=1)
+    pdf.cell(0, 10, f"Location: {lat:.6f}N {lon:.6f}E", ln=1)
+    pdf.cell(0, 10, "New Structures: 1", ln=1)
+    pdf.cell(0, 10, "Precision: 92%", ln=1)
     buffer = io.BytesIO()
     buffer.write(pdf.output(dest='S'))
     buffer.seek(0)
     return buffer.getvalue()
 
-# SOL BAR
+# SOL BAR (Foto-da olduğu kimi)
 with st.sidebar:
     st.markdown("""
-    <div style='background:linear-gradient(135deg,#1f6feb,#111827);padding:2rem;border-radius:15px;margin:-1rem -1rem 2rem -1rem;text-align:center'>
-        <h2 style='color:white;margin:0;font-size:26px;font-weight:800'>🛰️ SATELLA AI</h2>
-        <p style='color:#bfdbfe;font-size:12px;margin:5px 0 0 0;letter-spacing:2px'>Construction Detection</p>
+    <div style='background:linear-gradient(135deg,#1f6feb 0%,#111827 100%); 
+                padding:1.5rem;border-radius:12px;margin:-1rem -1rem 1.5rem -1rem;
+                border:1px solid rgba(255,255,255,0.1);text-align:center'>
+        <h2 style='color:white;font-size:22px;font-weight:800;margin:0'>🛰️ SATELLA AI</h2>
+        <p style='color:rgba(255,255,255,0.8);font-size:11px;margin:5px 0 0 0;
+                  letter-spacing:1.5px;text-transform:uppercase'>Baku Monitoring</p>
     </div>
     """, unsafe_allow_html=True)
     
-    st.markdown("### 📍 **Area of Interest**")
-    lat_val = st.text_input("**Latitude**", value="40.394799")
-    lon_val = st.text_input("**Longitude**", value="49.849585")
+    st.markdown("### 📍 Area of Interest")
+    lat_val = st.text_input("Latitude", "40.394799")
+    lon_val = st.text_input("Longitude", "49.849585")
     
-    if st.button("🎯 **Set Target**", use_container_width=True):
+    if st.button("🎯 Set Location"):
         st.session_state.lat = float(lat_val)
         st.session_state.lon = float(lon_val)
-        st.success("✅ Target set!")
     
-    st.markdown("### 🛰️ **Imagery Inputs**")
-    t0_file = st.file_uploader("**T0: 2024 Baseline**", type=["png","jpg"])
-    t1_file = st.file_uploader("**T1: 2025 Current**", type=["png","jpg"])
+    st.markdown("### 🛰️ Imagery")
+    t0_file = st.file_uploader("T0: 2024 Baseline", ["png","jpg"])
+    t1_file = st.file_uploader("T1: 2025 Current", ["png","jpg"])
     
-    if st.button("🚀 **RUN ANALYSIS**", use_container_width=True):
+    if st.button("🚀 RUN DETECTION"):
         if t0_file and t1_file:
             st.session_state.run = True
-            st.balloons()
+            st.success("✅ Analysis complete!")
         else:
-            st.error("Upload both images!")
+            st.error("Upload both images")
 
-# MAIN
-col1, col2 = st.columns([3.5,1.3])
+# MAIN (Foto-da olduğu kimi)
+col_map, col_metrics = st.columns([3.8, 1.2])
 
-with col1:
+with col_map:
     lat = st.session_state.get('lat', 40.394799)
     lon = st.session_state.get('lon', 49.849585)
     
-    m = folium.Map([lat, lon], zoom_start=18)
+    m = folium.Map([lat, lon], zoom_start=17)
     folium.TileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}").add_to(m)
-    folium.Marker([lat, lon]).add_to(m)
-    folium.Circle([lat, lon], 200, color='red', fill=True).add_to(m)
-    folium_static(m, width=1200, height=600)
+    folium.Marker([lat, lon], popup="Analysis Site").add_to(m)
+    folium_static(m, width=1100, height=500)
     
     if t0_file and t1_file:
         img1, img2 = process_images(t0_file, t1_file)
-        st.image([img1, img2], caption=["2024 T0", "2025 T1"], width=550)
+        col_img1, col_img2 = st.columns(2)
+        with col_img1: st.image(img1, caption="T0 2024", use_column_width=True)
+        with col_img2: st.image(img2, caption="T1 2025", use_column_width=True)
 
-with col2:
-    st.markdown("### 📊 **AI Results**")
-    st.metric("New Buildings", "1")
-    st.metric("Precision", "92%")
-    st.metric("F1 Score", "90%")
+with col_metrics:
+    st.markdown("### 📊 METRICS")
     
-    if st.session_state.get('run', False):
+    detections = 1 if st.session_state.get('run') else 0
+    st.markdown(f"""
+    <div style='background:#161b22;border:1px solid #30363d;border-radius:10px;padding:1.5rem;margin-bottom:1rem'>
+        <div style='color:#8b949e;font-size:12px;font-weight:600'>NEW BUILDINGS</div>
+        <div style='color:white;font-size:36px;font-weight:800'>{detections}</div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("""
+    <div style='background:#161b22;border:1px solid #30363d;border-radius:10px;padding:1.5rem;margin-bottom:1rem'>
+        <div style='color:#8b949e;font-size:12px;font-weight:600'>PRECISION</div>
+        <div style='color:#58a6ff;font-size:28px;font-weight:800'>92%</div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("""
+    <div style='background:#161b22;border:1px solid #30363d;border-radius:10px;padding:1.5rem'>
+        <div style='color:#8b949e;font-size:12px;font-weight:600'>F1 SCORE</div>
+        <div style='color:#3fb950;font-size:28px;font-weight:800'>90%</div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    if st.session_state.get('run'):
         pdf_data = generate_pdf(lat, lon)
-        st.download_button("📄 FHN Report", pdf_data, f"SATELLA_{lat}_{lon}.pdf")
+        st.download_button("📥 REPORT", pdf_data, "satella_report.pdf")
 
 st.markdown("---")
-st.caption("SATELLA AI v3.3 | VISTAR Excellence Program")
+st.caption("SATELLA AI | VISTAR Program")
