@@ -4,178 +4,308 @@ from streamlit_folium import folium_static
 from datetime import datetime
 from fpdf import FPDF
 
-# 1. SƏHİFƏ AYARLARI
-st.set_page_config(page_title="SATELLA AI", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title="SATELLA", layout="wide", initial_sidebar_state="expanded")
 
-# Session State tənzimləmələri
-if 'lat' not in st.session_state: st.session_state.lat = 40.4093
-if 'lon' not in st.session_state: st.session_state.lon = 49.8671
-if 'is_analysed' not in st.session_state: st.session_state.is_analysed = False
+if 'lat' not in st.session_state:
+    st.session_state.lat = 40.4093
+if 'lon' not in st.session_state:
+    st.session_state.lon = 49.8671
+if 'is_analysed' not in st.session_state:
+    st.session_state.is_analysed = False
+if 't0' not in st.session_state:
+    st.session_state.t0 = None
+if 't1' not in st.session_state:
+    st.session_state.t1 = None
 
-# 2. PROFESSIONAL KİBER-PANAL UI (CSS)
 st.markdown("""
 <style>
-    /* Ümumi fon və şrift */
-    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
-    
-    * { font-family: 'JetBrains Mono', monospace; }
+    * { font-family: 'Courier New', monospace; }
     
     html, body, [data-testid="stAppViewContainer"] {
-        background-color: #050b14 !important;
-        color: #e0e0e0;
+        background-color: #0a0e1a !important;
+        color: #c0c0c0;
     }
-
-    /* Sol Panel (Sidebar) */
+    
     [data-testid="stSidebar"] {
-        background-color: #08101a !important;
-        border-right: 2px solid #00d4ff !important;
-        box-shadow: 5px 0 15px rgba(0, 212, 255, 0.1);
+        background-color: #0f1419 !important;
+        border-right: 3px solid #d946a6 !important;
+        padding-top: 0 !important;
     }
-
-    /* Kartlar (Info Box) */
-    .cyber-card {
-        background: rgba(13, 31, 55, 0.8);
+    
+    [data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
+        gap: 0 !important;
+    }
+    
+    .sidebar-icon-row {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 30px;
+        padding-left: 8px;
+    }
+    
+    .sidebar-icon {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #051a2e;
         border: 1px solid #1a4d6d;
-        padding: 15px;
         border-radius: 4px;
-        margin-bottom: 15px;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .cyber-card::before {
-        content: "";
-        position: absolute;
-        top: 0; left: 0; width: 4px; height: 100%;
-        background: #00d4ff;
-    }
-
-    .stat-value {
         color: #00d4ff;
-        font-size: 28px;
-        font-weight: bold;
-        text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
-    }
-
-    /* Düymələr */
-    .stButton>button {
-        background: linear-gradient(90deg, #0d3f5a 0%, #1a7a9f 100%) !important;
-        color: white !important;
-        border: 1px solid #00d4ff !important;
-        border-radius: 2px !important;
-        font-weight: bold !important;
-        transition: 0.3s all;
+        font-size: 18px;
+        cursor: pointer;
     }
     
-    .stButton>button:hover {
-        box-shadow: 0 0 15px #00d4ff;
-        transform: translateY(-2px);
+    .section-title {
+        color: #00d4ff;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: bold;
+        margin: 20px 0 12px 0;
     }
-
-    /* Header gizlət */
-    [data-testid="stHeader"] { display: none !important; }
+    
+    .info-box {
+        background: #051a2e;
+        border: 1px solid #1a4d6d;
+        padding: 12px;
+        border-radius: 3px;
+        margin-bottom: 12px;
+    }
+    
+    .info-box-title {
+        color: #7a8fa0;
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin: 0 0 4px 0;
+    }
+    
+    .info-box-content {
+        color: #e0e0e0;
+        font-size: 12px;
+        margin: 4px 0 0 0;
+        font-weight: bold;
+    }
+    
+    .info-box-small {
+        color: #7a8fa0;
+        font-size: 9px;
+        margin: 4px 0 0 0;
+    }
+    
+    input {
+        background-color: #051a2e !important;
+        border: 1px solid #1a4d6d !important;
+        color: #e0e0e0 !important;
+        border-radius: 2px !important;
+        padding: 8px 10px !important;
+        font-size: 11px !important;
+        font-family: 'Courier New', monospace !important;
+    }
+    
+    input:focus {
+        border-color: #00d4ff !important;
+        outline: none !important;
+        box-shadow: 0 0 6px rgba(0, 212, 255, 0.1) !important;
+    }
+    
+    button {
+        background-color: #0d3f5a !important;
+        color: #00d4ff !important;
+        border: 1px solid #1a7a9f !important;
+        border-radius: 2px !important;
+        padding: 10px !important;
+        font-size: 10px !important;
+        font-weight: bold !important;
+        letter-spacing: 0.5px !important;
+        text-transform: uppercase !important;
+        font-family: 'Courier New', monospace !important;
+    }
+    
+    button:hover {
+        background-color: #0f5a7f !important;
+        border-color: #00d4ff !important;
+    }
+    
+    hr {
+        border: none !important;
+        border-top: 1px solid #1a4d6d !important;
+        margin: 15px 0 !important;
+    }
+    
+    .file-uploader-label {
+        color: #7a8fa0;
+        font-size: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 4px;
+        display: block;
+    }
 </style>
 """, unsafe_allow_html=True)
 
-# --- SOL PANEL (SIDEBAR) ---
 with st.sidebar:
-    # Logo & Status
     st.markdown("""
-    <div style="background: #0d2b45; border: 1px solid #1a4d6d; padding: 20px; border-radius: 4px; margin-bottom: 25px;">
-        <h1 style="color: #00d4ff; margin: 0; font-size: 22px; letter-spacing: 3px;">🛰️ SATELLA</h1>
-        <p style="color: #7a8fa0; font-size: 10px; margin: 5px 0 0 0;">GEO-INTEL CORE v3.2</p>
-        <div style="margin-top:10px;"><span style="color: #00ff88;">●</span> <small>SYSTEM LIVE</small></div>
+    <div style="display: flex; gap: 12px; margin-bottom: 30px; padding: 0 8px;">
+        <div style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #1a5a7a, #0d2b45); border: 1px solid #1a7a9f; border-radius: 4px; color: #00d4ff; font-size: 20px;">🛰️</div>
+        <div style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: #051a2e; border: 1px solid #1a4d6d; border-radius: 4px; color: #7a8fa0; font-size: 18px; cursor: pointer;">📋</div>
+        <div style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: #051a2e; border: 1px solid #1a4d6d; border-radius: 4px; color: #7a8fa0; font-size: 18px; cursor: pointer;">⏱️</div>
+        <div style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: #051a2e; border: 1px solid #1a4d6d; border-radius: 4px; color: #7a8fa0; font-size: 18px; cursor: pointer;">📊</div>
+        <div style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: #051a2e; border: 1px solid #1a4d6d; border-radius: 4px; color: #7a8fa0; font-size: 18px; cursor: pointer;">🗂️</div>
     </div>
     """, unsafe_allow_html=True)
-
-    # Coordinates
-    st.subheader("🎯 TARGETING")
-    lat_in = st.text_input("LATITUDE", value=str(st.session_state.lat))
-    lon_in = st.text_input("LONGITUDE", value=str(st.session_state.lon))
     
-    if st.button("🔄 RELOCATE SCANNER", use_container_width=True):
-        st.session_state.lat = float(lat_input) if 'lat_input' in locals() else float(lat_in)
-        st.session_state.lon = float(lon_input) if 'lon_input' in locals() else float(lon_in)
-        st.rerun()
-
+    st.markdown("""
+    <div style="background: #0d2b45; border: 1px solid #1a4d6d; padding: 16px; border-radius: 2px; margin-bottom: 20px;">
+        <h2 style="color: #e0e0e0; margin: 0; font-size: 16px; letter-spacing: 2px;">SATELLA</h2>
+        <p style="color: #7a8fa0; font-size: 9px; margin: 4px 0 0 0; letter-spacing: 1px;">GEO-INTELLIGENCE PLATFORM</p>
+        <span style="background: #00a855; color: white; padding: 3px 6px; border-radius: 2px; font-size: 7px; margin-top: 8px; display: inline-block; font-weight: bold;">● LIVE</span>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown('<div class="section-title">▶ CURRENT PROJECT</div>', unsafe_allow_html=True)
+    st.markdown("""
+    <div class="info-box">
+        <p class="info-box-content">Baku Urban Expansion</p>
+        <p class="info-box-small">ID: AZ-BU-2025-09</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown('<div class="section-title">🎯 TARGET COORDINATES</div>', unsafe_allow_html=True)
+    col1, col2 = st.columns(2, gap="small")
+    with col1:
+        st.markdown('<label class="file-uploader-label">LATITUDE</label>', unsafe_allow_html=True)
+        lat_input = st.text_input("", value=str(st.session_state.lat), label_visibility="collapsed", key="lat_input")
+    with col2:
+        st.markdown('<label class="file-uploader-label">LONGITUDE</label>', unsafe_allow_html=True)
+        lon_input = st.text_input("", value=str(st.session_state.lon), label_visibility="collapsed", key="lon_input")
+    
+    if st.button("🔄 Relocate Scanner", use_container_width=True):
+        try:
+            st.session_state.lat = float(lat_input)
+            st.session_state.lon = float(lon_input)
+            st.rerun()
+        except:
+            st.error("Invalid coordinates")
+    
     st.markdown("---")
     
-    # Files
-    st.subheader("⚙️ DATA INGEST")
-    t0_file = st.file_uploader("BASELINE (T0)", type=["png", "jpg"])
-    t1_file = st.file_uploader("TARGET (T1)", type=["png", "jpg"])
+    st.markdown('<div class="section-title">⚙️ INGEST ENGINE</div>', unsafe_allow_html=True)
     
-    if st.button("▶ START AI ENGINE", use_container_width=True):
-        if t0_file and t1_file:
+    st.markdown("""
+    <div class="info-box">
+        <p class="info-box-title">📦 Baseline Imagery (T0)</p>
+        <p class="info-box-small">Sentinel-2 L2A</p>
+    </div>
+    """, unsafe_allow_html=True)
+    t0_file = st.file_uploader("", type=["png", "jpg", "jpeg"], label_visibility="collapsed", key="t0_up")
+    
+    st.markdown("""
+    <div class="info-box">
+        <p class="info-box-title">▶️ Target Imagery (T1)</p>
+        <p class="info-box-small">Sentinel-2 L2A</p>
+    </div>
+    """, unsafe_allow_html=True)
+    t1_file = st.file_uploader("", type=["png", "jpg", "jpeg"], label_visibility="collapsed", key="t1_up")
+    
+    if t0_file:
+        st.session_state.t0 = t0_file
+    if t1_file:
+        st.session_state.t1 = t1_file
+    
+    st.markdown("---")
+    
+    if st.button("▶ INITIALIZE AI ANALYSIS", use_container_width=True):
+        if st.session_state.t0 and st.session_state.t1:
             st.session_state.is_analysed = True
             st.balloons()
+            st.rerun()
         else:
-            st.warning("Data stream missing.")
+            st.error("Upload both files")
+    
+    st.markdown("""
+    <div style="position: fixed; bottom: 20px; left: 20px; width: calc(100% - 40px);">
+        <div style="display: flex; gap: 12px;">
+            <div style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: #051a2e; border: 1px solid #1a4d6d; border-radius: 4px; color: #7a8fa0; font-size: 18px; cursor: pointer;">⚙️</div>
+            <div style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: #051a2e; border: 1px solid #1a4d6d; border-radius: 4px; color: #7a8fa0; font-size: 18px; cursor: pointer;">👤</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
-# --- ƏSAS EKRAN (MAP & ANALYTICS) ---
-col_map, col_data = st.columns([3.5, 1.2])
+col_map, col_panel = st.columns([3.5, 1.2], gap="small")
 
 with col_map:
-    # Real-vaxt xəritə tənzimləməsi
-    # ArcGIS World Imagery daha detallı və "real" görünür (Google Map alternativi)
-    m = folium.Map(
-        location=[st.session_state.lat, st.session_state.lon], 
-        zoom_start=18, 
-        tiles=None # Standart xəritəni silirik
-    )
+    lat = st.session_state.lat
+    lon = st.session_state.lon
     
-    # Yüksək Keyfiyyətli Peyk Təbəqəsi
+    m = folium.Map(location=[lat, lon], zoom_start=18)
     folium.TileLayer(
         tiles="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-        attr="Esri World Imagery",
-        name="Satellite View"
+        attr="Esri"
     ).add_to(m)
+    folium.Marker([lat, lon], popup="Target").add_to(m)
     
-    # Hədəf nişanı
-    folium.Marker(
-        [st.session_state.lat, st.session_state.lon],
-        popup="Target AOI",
-        icon=folium.Icon(color='blue', icon='crosshairs', prefix='fa')
-    ).add_to(m)
-    
-    # Xəritəni göstər
-    folium_static(m, width=1050, height=650)
-    
-    # Şəkil müqayisəsi (Analizdən sonra)
-    if st.session_state.is_analysed:
-        st.markdown("### 🔍 OPTICAL COMPARISON")
-        c1, c2 = st.columns(2)
-        c1.image(t0_file, caption="2024 (Baseline)", use_container_width=True)
-        c2.image(t1_file, caption="2025 (Target)", use_container_width=True)
+    folium_static(m, width=1050, height=700)
 
-with col_data:
-    st.markdown("### 📊 ANALYTICS")
-    
-    # Stat Kartları
-    det_val = "6" if st.session_state.is_analysed else "0"
-    st.markdown(f"""
-    <div class="cyber-card">
-        <p style="color: #7a8fa0; font-size: 11px; margin:0;">NEW STRUCTURES</p>
-        <p class="stat-value">{det_val} Units</p>
+with col_panel:
+    st.markdown("""
+    <div class="info-box">
+        <p class="info-box-title">🔍 DETECTION LAYER</p>
     </div>
     """, unsafe_allow_html=True)
     
-    conf_val = "92.4%" if st.session_state.is_analysed else "0.0%"
+    detections = "1" if st.session_state.is_analysed else "0"
     st.markdown(f"""
-    <div class="cyber-card">
-        <p style="color: #7a8fa0; font-size: 11px; margin:0;">AI PRECISION</p>
-        <p class="stat-value" style="color: #00ff88;">{conf_val}</p>
+    <div class="info-box">
+        <p class="info-box-title">Structural Detections</p>
+        <p style="color: #00d4ff; font-size: 24px; font-weight: bold; margin: 6px 0 0 0;">{detections}</p>
     </div>
     """, unsafe_allow_html=True)
-
-    # Export
+    
+    confidence = "92.4" if st.session_state.is_analysed else "0.0"
+    st.markdown(f"""
+    <div class="info-box">
+        <p class="info-box-title">AI Confidence</p>
+        <p style="color: #00d4ff; font-size: 24px; font-weight: bold; margin: 6px 0 0 0;">{confidence}%</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("""
+    <div class="info-box">
+        <p class="info-box-title">📥 EXPORT PROTOCOL</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
     if st.session_state.is_analysed:
-        st.markdown("### 📥 PROTOCOL")
         pdf = FPDF()
         pdf.add_page()
-        pdf.set_font("Arial", 'B', 16)
-        pdf.cell(40, 10, "SATELLA INTELLIGENCE REPORT")
-        pdf_out = pdf.output(dest='S').encode('latin-1')
-        st.download_button("DOWNLOAD DATA", pdf_out, "report.pdf", use_container_width=True)
-
-st.markdown("<p style='text-align:center; color:#30363d; font-size:10px; margin-top:50px;'>SATELLA GEO-INTEL // ENCRYPTED CONNECTION</p>", unsafe_allow_html=True)
+        pdf.set_font("Arial", 'B', 14)
+        pdf.cell(0, 10, "SATELLA AI REPORT", ln=True, align='C')
+        pdf.set_font("Arial", '', 10)
+        pdf.cell(0, 8, f"Location: {lat}, {lon}", ln=True)
+        pdf.cell(0, 8, f"Time: {datetime.now().strftime('%Y-%m-%d %H:%M')}", ln=True)
+        pdf_data = pdf.output(dest='S').encode('latin-1', 'ignore')
+        
+        st.download_button(
+            label="⬇ Download Report",
+            data=pdf_data,
+            file_name=f"SATELLA_{datetime.now().strftime('%Y%m%d')}.pdf",
+            mime="application/pdf",
+            use_container_width=True
+        )
+    
+    st.markdown("""
+    <div class="info-box">
+        <p class="info-box-title">📷 IMAGERY FEED</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    if st.session_state.t0:
+        st.markdown('<p style="color: #00d4ff; font-size: 8px; text-align: center; margin: 6px 0 4px 0; text-transform: uppercase;">REF: 2024</p>', unsafe_allow_html=True)
+        st.image(st.session_state.t0, use_container_width=True)
+    
+    if st.session_state.t1:
+        st.markdown('<p style="color: #00d4ff; font-size: 8px; text-align: center; margin: 6px 0 4px 0; text-transform: uppercase;">TARGET: 2025</p>', unsafe_allow_html=True)
+        st.image(st.session_state.t1, use_container_width=True)
