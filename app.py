@@ -5,129 +5,191 @@ from datetime import datetime
 from fpdf import FPDF
 from PIL import Image
 
-# 1. SƏHİFƏ AYARLARI
+# 1. SAYFA AYARLARI
 st.set_page_config(
     page_title="SATELLA AI", 
     layout="wide", 
     initial_sidebar_state="expanded"
 )
 
-# 2. RADİKAL CSS (Sidebar-ın itməsini fiziki olaraq bloklayır)
+# 2. SESSION STATE BAŞLATMA (SAYFA YENİLENDİĞİNDE KAYBOLMASINı ENGELLE)
+if 'lat' not in st.session_state:
+    st.session_state.lat = 40.394799
+if 'lon' not in st.session_state:
+    st.session_state.lon = 49.849585
+if 'is_analysed' not in st.session_state:
+    st.session_state.is_analysed = False
+if 't0' not in st.session_state:
+    st.session_state.t0 = None
+if 't1' not in st.session_state:
+    st.session_state.t1 = None
+
+# 3. CSS AYARLARI
 st.markdown("""
 <style>
-    /* Ana fon */
+    /* Ana tətbiq fonu */
     .stApp { background-color: #0b0d0e; }
-
-    /* SIDEBAR-I MƏCBURİ SABİTLƏMƏK */
+    
+    /* SIDEBAR: Görünməsi üçün rəngi və ölçüsünü sabitləyirik */
     [data-testid="stSidebar"] {
-        background-color: #0d1117 !important;
-        min-width: 320px !important;
-        max-width: 320px !important;
-        border-right: 1px solid #30363d !important;
-        visibility: visible !important;
-        display: block !important;
+        background-color: #111418 !important;
+        width: 350px !important;
+        border-right: 2px solid #1f6feb !important;
     }
-
-    /* Sidebar daxilindəki elementləri ağ rəng etmək */
+    
+    /* Sidebar daxilindəki mətnləri məcburi ağ rəng edirik */
     [data-testid="stSidebar"] * {
         color: white !important;
     }
 
-    /* Xəritənin kənarlara sıxılmaması üçün əsas konteynerə boşluq veririk */
-    [data-testid="stHorizontalBlock"] {
-        padding-left: 20px;
-        padding-right: 20px;
+    /* Input və düymələrin sidebar-da fərqlənməsi üçün */
+    [data-testid="stSidebar"] .stTextInput input {
+        background-color: #1c2128 !important;
+        border: 1px solid #30363d !important;
+        color: white !important;
     }
 
-    /* Headeri gizlət */
-    [data-testid="stHeader"] { display: none !important; }
-
     /* Brend Başlığı */
-    .brand-box {
-        background: #1f6feb;
-        padding: 20px;
-        border-radius: 10px;
+    .brand-container {
+        background: linear-gradient(135deg, #1f6feb 0%, #0d1117 100%);
+        padding: 25px;
+        border-radius: 12px;
         margin-bottom: 20px;
         text-align: center;
+        border: 1px solid #388bfd;
+    }
+
+    /* Header gizlət */
+    [data-testid="stHeader"] { display: none !important; }
+
+    /* Metrika kartları (Sağ panel) */
+    .metric-card {
+        background: #161b22;
+        border: 1px solid #30363d;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 12px;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# 3. PDF FUNKSİYASI
+# 4. PDF GENERATOR
 def create_report(lat, lon):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", 'B', 16)
     pdf.cell(0, 15, "SATELLA AI - MONITORING REPORT", ln=True, align='C')
+    pdf.ln(10)
     pdf.set_font("Arial", '', 12)
     pdf.cell(0, 10, f"Location: {lat}, {lon}", ln=True)
+    pdf.cell(0, 10, f"Analysis Time: {datetime.now().strftime('%Y-%m-%d %H:%M')}", ln=True)
     return pdf.output(dest='S').encode('latin-1', 'ignore')
 
 # --- 🛰️ SOL PANEL (SIDEBAR) ---
 with st.sidebar:
-    st.markdown('<div class="brand-box"><h2 style="margin:0;color:white;">🛰️ SATELLA</h2></div>', unsafe_allow_html=True)
+    st.markdown("""
+    <div class="brand-container">
+        <h2 style="margin:0; font-size:24px;">🛰️ SATELLA</h2>
+        <p style="font-size:10px; opacity:0.8; letter-spacing:1px; margin-top:5px;">ENTERPRISE AI MONITORING</p>
+    </div>
+    """, unsafe_allow_html=True)
     
-    st.markdown("### 📍 Location")
-    lat_val = st.text_input("Latitude", value="40.394799", key="lat_field")
-    lon_val = st.text_input("Longitude", value="49.849585", key="lon_field")
+    st.markdown("### 📍 Location Control")
     
-    if st.button("🎯 UPDATE VIEW", use_container_width=True):
-        st.session_state.lat = float(lat_val)
-        st.session_state.lon = float(lon_val)
+    # Session state'den oku ve yazıyla session state'e yaz
+    lat_val = st.text_input(
+        "Latitude", 
+        value=str(st.session_state.lat), 
+        key="side_lat"
+    )
+    lon_val = st.text_input(
+        "Longitude", 
+        value=str(st.session_state.lon), 
+        key="side_lon"
+    )
+    
+    if st.button("🎯 UPDATE MAP VIEW", use_container_width=True):
+        try:
+            st.session_state.lat = float(lat_val)
+            st.session_state.lon = float(lon_val)
+            st.success("Map updated!")
+            st.rerun()
+        except ValueError:
+            st.error("Please enter valid numbers!")
 
     st.markdown("---")
-    st.markdown("### 🛰️ Imagery")
-    t0 = st.file_uploader("T0: 2024", type=["png", "jpg"], key="t0_up")
-    t1 = st.file_uploader("T1: 2025", type=["png", "jpg"], key="t1_up")
+    st.markdown("### 🛰️ Imagery Feed")
     
-    if st.button("🚀 EXECUTE AI", use_container_width=True):
-        if t0 and t1:
-            st.session_state.ready = True
+    t0 = st.file_uploader("T0: 2024 Reference", type=["png", "jpg"], key="up_t0")
+    t1 = st.file_uploader("T1: 2025 Current", type=["png", "jpg"], key="up_t1")
+    
+    # Dosya yüklenirse session state'e kaydet
+    if t0:
+        st.session_state.t0 = t0
+    if t1:
+        st.session_state.t1 = t1
+    
+    if st.button("🚀 EXECUTE AI ENGINE", use_container_width=True):
+        if st.session_state.t0 and st.session_state.t1:
+            st.session_state.is_analysed = True
             st.balloons()
+            st.success("Analysis Complete!")
+            st.rerun()
+        else:
+            st.error("Missing Data! Upload both images.")
 
-# --- 🗺️ ƏSAS EKRAN ---
-# Xəritəni sidebar-ı sıxışdırmasın deyə mütənasib ölçüdə saxlayırıq
-col_main, col_stats = st.columns([3.5, 1])
+# --- 🗺️ ƏSAS EKRAN LAYOUT ---
+col_map, col_data = st.columns([3.5, 1.2])
 
-with col_main:
-    lat = st.session_state.get('lat', 40.394799)
-    lon = st.session_state.get('lon', 49.849585)
+with col_map:
+    # Session state'den koordinatları oku
+    lat = st.session_state.lat
+    lon = st.session_state.lon
     
-    # Xəritə (ArcGIS Attribution düzəlişi ilə)
+    # Xəritə (ArcGIS Satellite)
     m = folium.Map(location=[lat, lon], zoom_start=18)
     folium.TileLayer(
         tiles="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
         attr="Esri Satellite",
-        name="Satellite"
+        name="ArcGIS"
     ).add_to(m)
-    folium.Marker([lat, lon]).add_to(m)
+    folium.Marker([lat, lon], tooltip="Current Target Area").add_to(m)
     
-    # Xəritə ölçüsü: Enini (width) çox böyük etmirik ki, sidebarı itirməsin
-    folium_static(m, width=950, height=500)
+    # Xəritəni göstər
+    folium_static(m, width=1000, height=530)
     
-    if t0 and t1:
-        st.markdown("### 🔍 Image Sync")
+    # Session state'dən görsəlləri oku
+    if st.session_state.t0 and st.session_state.t1:
+        st.markdown("### 🔍 Side-by-Side Analysis")
         c1, c2 = st.columns(2)
-        c1.image(t0, caption="2024 (T0)", use_container_width=True)
-        c2.image(t1, caption="2025 (T1)", use_container_width=True)
+        c1.image(st.session_state.t0, caption="2024 (T0)", use_container_width=True)
+        c2.image(st.session_state.t1, caption="2025 (T1)", use_container_width=True)
 
-with col_stats:
+with col_data:
     st.markdown("### 📊 Metrics")
-    detect = "1" if st.session_state.get('ready', False) else "0"
+    detected = "1" if st.session_state.is_analysed else "0"
     
     st.markdown(f"""
-    <div style="background:#161b22; padding:15px; border-radius:8px; border:1px solid #30363d; margin-bottom:10px;">
-        <p style="color:#8b949e; font-size:12px; margin:0;">NEW BUILDINGS</p>
-        <p style="color:white; font-size:24px; font-weight:bold; margin:0;">{detect}</p>
+    <div class="metric-card">
+        <p style="color:#8b949e; font-size:12px; margin:0;">NEW OBJECTS</p>
+        <p style="color:white; font-size:26px; font-weight:bold; margin:0;">{detected} Units</p>
     </div>
-    <div style="background:#161b22; padding:15px; border-radius:8px; border:1px solid #30363d;">
+    <div class="metric-card">
         <p style="color:#8b949e; font-size:12px; margin:0;">AI CONFIDENCE</p>
-        <p style="color:#58a6ff; font-size:24px; font-weight:bold; margin:0;">92.4%</p>
+        <p style="color:#58a6ff; font-size:26px; font-weight:bold; margin:0;">92.4%</p>
     </div>
     """, unsafe_allow_html=True)
     
-    if st.session_state.get('ready', False):
-        report = create_report(lat, lon)
-        st.download_button("📥 DOWNLOAD REPORT", report, "report.pdf", use_container_width=True)
+    if st.session_state.is_analysed:
+        st.info("Analysis Ready")
+        pdf_report = create_report(lat, lon)
+        st.download_button(
+            label="📥 DOWNLOAD REPORT",
+            data=pdf_report,
+            file_name=f"Satella_Report_{datetime.now().strftime('%Y%m%d')}.pdf",
+            mime="application/pdf",
+            use_container_width=True
+        )
 
-st.markdown("<hr><center style='color:grey; font-size:10px;'>SATELLA AI v3.3</center>", unsafe_allow_html=True)
+# Footer
+st.markdown("<br><hr><center style='color:#484f58; font-size:11px;'>SATELLA AI v3.3 | Professional Geospatial System</center>", unsafe_allow_html=True)
