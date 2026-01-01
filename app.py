@@ -41,7 +41,7 @@ st.markdown("""
     /* SIDEBAR */
     [data-testid="stSidebar"] {
         background-color: #0a0e27 !important;
-        border-right: 1px solid #1a4d6d !important;
+        border-right: 2px solid #c41e3a !important;
     }
 
     /* MAIN CONTENT */
@@ -218,13 +218,32 @@ st.markdown("""
         margin: 15px 0;
     }
 
+    /* === RIGHT PANEL === */
+    .right-panel {
+        background: #0a0e27;
+        border: 2px solid #c41e3a;
+        border-radius: 2px;
+        padding: 15px;
+        height: 100%;
+    }
+
+    .right-panel-title {
+        font-size: 10px;
+        color: #7a8fa0;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        margin: 0 0 15px 0;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #1a4d6d;
+    }
+
     /* === STATS === */
     .stat-box {
-        background: #0a0e27;
+        background: #051a2e;
         border: 1px solid #1a4d6d;
         border-radius: 1px;
-        padding: 10px;
-        margin-bottom: 8px;
+        padding: 12px;
+        margin-bottom: 10px;
     }
 
     .stat-label {
@@ -236,47 +255,70 @@ st.markdown("""
     }
 
     .stat-value {
-        font-size: 18px;
+        font-size: 20px;
         color: #00d4ff;
-        margin: 6px 0 0 0;
+        margin: 8px 0 0 0;
         font-weight: bold;
     }
 
-    /* === MAIN CONTENT === */
-    .main-title {
-        font-size: 11px;
+    .stat-secondary {
+        font-size: 8px;
+        color: #00ff41;
+        margin: 6px 0 0 0;
+    }
+
+    /* === IMAGE FEED === */
+    .image-feed-title {
+        font-size: 9px;
         color: #7a8fa0;
         text-transform: uppercase;
         letter-spacing: 1px;
-        margin: 0 0 12px 0;
+        margin: 15px 0 10px 0;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #1a4d6d;
     }
 
-    .data-card {
-        background: #0a0e27;
+    .image-preview {
+        background: #051a2e;
         border: 1px solid #1a4d6d;
-        border-radius: 2px;
-        padding: 15px;
-        margin-bottom: 12px;
+        border-radius: 1px;
+        padding: 8px;
+        margin-bottom: 8px;
+        text-align: center;
     }
 
-    .data-card-title {
-        font-size: 11px;
+    .image-preview-label {
+        font-size: 8px;
         color: #00d4ff;
-        margin: 0 0 10px 0;
+        margin: 0 0 6px 0;
+        text-transform: uppercase;
+    }
+
+    .image-preview-img {
+        width: 100%;
+        border-radius: 1px;
+        border: 1px solid #1a4d6d;
+    }
+
+    /* === EXPORT === */
+    .export-section {
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid #1a4d6d;
+    }
+
+    .export-label {
+        font-size: 8px;
+        color: #7a8fa0;
         text-transform: uppercase;
         letter-spacing: 1px;
+        margin-bottom: 10px;
+        display: block;
     }
 
-    .data-card-value {
-        font-size: 14px;
-        color: #e0e0e0;
-        margin: 0;
-    }
-
-    .data-card-secondary {
-        font-size: 10px;
-        color: #00ff41;
-        margin: 8px 0 0 0;
+    /* Main map container */
+    .main-container {
+        position: relative;
     }
 
 </style>
@@ -326,8 +368,7 @@ with st.sidebar:
         st.markdown('<div style="font-size: 7px; color: #7a8fa0; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">LONGITUDE</div>', unsafe_allow_html=True)
         lon_val = st.text_input("LON", value=str(st.session_state.lon), key="side_lon", label_visibility="collapsed")
     
-    st.button("🔄 Relocate Scanner", use_container_width=True, key="relocate_btn", help="Update target area")
-    if st.session_state.get('relocate_btn'):
+    if st.button("🔄 Relocate Scanner", use_container_width=True):
         try:
             st.session_state.lat = float(lat_val)
             st.session_state.lon = float(lon_val)
@@ -364,26 +405,8 @@ with st.sidebar:
         else:
             st.error("Upload both imagery files")
 
-    st.markdown('<hr class="divider">', unsafe_allow_html=True)
-
-    # STATS
-    st.markdown('<div class="section-title"><span class="section-title-icon">📊</span>ANALYSIS STATS</div>', unsafe_allow_html=True)
-    
-    detected = "1" if st.session_state.is_analysed else "0"
-    
-    st.markdown(f"""
-    <div class="stat-box">
-        <p class="stat-label">Structural Detections</p>
-        <p class="stat-value">{detected}</p>
-    </div>
-    <div class="stat-box">
-        <p class="stat-label">AI Confidence</p>
-        <p class="stat-value">92.4%</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-# --- MAIN CONTENT ---
-col_map, col_right = st.columns([3, 1.3])
+# --- MAIN LAYOUT ---
+col_map, col_right = st.columns([3.2, 1.1])
 
 with col_map:
     lat = st.session_state.lat
@@ -397,36 +420,56 @@ with col_map:
     ).add_to(m)
     folium.Marker([lat, lon], tooltip="Target Area", popup="Current Scan Zone").add_to(m)
     
-    folium_static(m, width=1000, height=550)
-    
-    if st.session_state.t0 and st.session_state.t1:
-        st.markdown('<div class="main-title">🔍 Imagery Comparison</div>', unsafe_allow_html=True)
-        c1, c2 = st.columns(2)
-        with c1:
-            st.image(st.session_state.t0, caption="REF: 2024", use_container_width=True)
-        with c2:
-            st.image(st.session_state.t1, caption="TARGET: 2025", use_container_width=True)
+    folium_static(m, width=1100, height=660)
 
 with col_right:
-    st.markdown('<div class="main-title">Detection Layer</div>', unsafe_allow_html=True)
-    
-    detected = "1" if st.session_state.is_analysed else "0"
-    
-    st.markdown(f"""
-    <div class="data-card">
-        <div class="data-card-title">Structural Detections</div>
-        <div class="data-card-value">{detected}</div>
-    </div>
-    <div class="data-card">
-        <div class="data-card-title">AI Confidence</div>
-        <div class="data-card-value">92.4%</div>
-        <div class="data-card-secondary">Status: OPTIMAL</div>
+    st.markdown("""
+    <div class="right-panel">
+        <div class="right-panel-title">🔍 DETECTION LAYER</div>
     </div>
     """, unsafe_allow_html=True)
     
+    # STATS
+    detected = "1" if st.session_state.is_analysed else "0"
+    
+    st.markdown(f"""
+    <div class="stat-box">
+        <div class="stat-label">Structural Detections</div>
+        <div class="stat-value">{detected}</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-label">AI Confidence</div>
+        <div class="stat-value">92.4%</div>
+        <div class="stat-secondary">Status: OPTIMAL</div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # IMAGE FEED
+    st.markdown('<div class="image-feed-title">📷 IMAGERY FEED</div>', unsafe_allow_html=True)
+    
+    if st.session_state.t0:
+        st.markdown(f"""
+        <div class="image-preview">
+            <div class="image-preview-label">REF: 2024</div>
+        </div>
+        """, unsafe_allow_html=True)
+        st.image(st.session_state.t0, use_container_width=True)
+    
+    if st.session_state.t1:
+        st.markdown(f"""
+        <div class="image-preview">
+            <div class="image-preview-label">TARGET: 2025</div>
+        </div>
+        """, unsafe_allow_html=True)
+        st.image(st.session_state.t1, use_container_width=True)
+    
+    # EXPORT
     if st.session_state.is_analysed:
-        st.markdown('<br>', unsafe_allow_html=True)
-        st.markdown('<div style="background: #0a0e27; border: 1px solid #1a4d6d; padding: 12px; border-radius: 2px;"><div style="font-size: 8px; color: #7a8fa0; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Export Protocol</div>', unsafe_allow_html=True)
+        st.markdown("""
+        <div class="export-section">
+            <span class="export-label">📥 Export Protocol</span>
+        </div>
+        """, unsafe_allow_html=True)
         pdf_report = create_report(lat, lon)
         st.download_button(
             label="⬇️ Download Report",
@@ -435,12 +478,11 @@ with col_right:
             mime="application/pdf",
             use_container_width=True
         )
-        st.markdown('</div>', unsafe_allow_html=True)
 
 # FOOTER
 st.markdown("""
-<div style='text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #1a4d6d;'>
+<div style='position: fixed; bottom: 0; left: 0; right: 0; background: #000814; border-top: 1px solid #1a4d6d; padding: 12px; text-align: center;'>
 <div style='font-size: 8px; color: #7a8fa0; letter-spacing: 1px;'>SATELLA AI v4.0 | GEOSPATIAL MONITORING SYSTEM</div>
-<div style='font-size: 7px; color: #2a5a7a; margin-top: 8px;'>SYSTEM ONLINE • AZEROSMOS LINK STEADY • ALL SYSTEMS NOMINAL</div>
+<div style='font-size: 7px; color: #2a5a7a; margin-top: 4px;'>■ SYSTEM ONLINE  ■ AZEROSMOS LINK STEADY  ■ NO INTERFERENCE</div>
 </div>
 """, unsafe_allow_html=True)
