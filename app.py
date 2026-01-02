@@ -4,18 +4,11 @@ from streamlit_folium import folium_static
 from datetime import datetime
 from PIL import Image
 import io
-
-# ReportLab PDF yaradıcısı
-try:
-    from reportlab.pdfgen import canvas
-    from reportlab.lib.pagesizes import letter
-    PDF_AVAILABLE = True
-except ImportError:
-    PDF_AVAILABLE = False
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
 
 st.set_page_config(page_title="SATELLA", layout="wide", initial_sidebar_state="expanded")
 
-# Session State
 if 'lat' not in st.session_state:
     st.session_state.lat = 40.4093
 if 'lon' not in st.session_state:
@@ -31,7 +24,6 @@ if 't0_display' not in st.session_state:
 if 't1_display' not in st.session_state:
     st.session_state.t1_display = None
 
-# CSS
 st.markdown("""
 <style>
     * { font-family: 'Segoe UI', sans-serif; letter-spacing: 0.3px; }
@@ -91,7 +83,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# SIDEBAR
 with st.sidebar:
     st.markdown("""
     <div style="display: flex; gap: 12px; margin-bottom: 28px; padding: 0 8px; align-items: center;">
@@ -132,7 +123,6 @@ with st.sidebar:
         st.rerun()
     
     st.markdown("---")
-    
     st.markdown('<p class="section-label" style="border-left: 2px solid #d946a6; padding-left: 10px;">⚙️ INGEST ENGINE</p>', unsafe_allow_html=True)
     
     st.markdown("""<div class="info-box" style="border: 1px dashed #1a7a9f;">
@@ -168,14 +158,12 @@ with st.sidebar:
         else:
             st.error("⚠️ Upload both imagery files")
 
-# MAIN
 col_search = st.columns(1)[0]
 with col_search:
     st.text_input("🔍 Search coordinates, projects, or inspectors...", placeholder="", label_visibility="collapsed", key="search_input")
 
 col_map, col_panel = st.columns([2.8, 1.4], gap="small")
 
-# MAP
 with col_map:
     lat = st.session_state.lat
     lon = st.session_state.lon
@@ -188,7 +176,6 @@ with col_map:
     folium.Marker([lat, lon], popup="Target", icon=folium.Icon(color='blue')).add_to(m)
     folium_static(m, width=900, height=700)
 
-# RIGHT PANEL
 with col_panel:
     st.markdown("""<div style="background: #0f1419; border: 1px solid #1a4d6d; padding: 13px; border-radius: 4px; margin-bottom: 14px;">
         <p style="color: #7a8fa0; font-size: 10px; text-transform: uppercase; margin: 0; font-weight: 600;">🔍 DETECTION LAYER</p>
@@ -210,33 +197,30 @@ with col_panel:
         <p class="info-box-label">📥 Export Protocol</p>
     </div>""", unsafe_allow_html=True)
     
-    if st.session_state.is_analysed and PDF_AVAILABLE:
+    if st.session_state.is_analysed:
         pdf_buffer = io.BytesIO()
-        pdf_canvas = canvas.Canvas(pdf_buffer, pagesize=letter)
+        c = canvas.Canvas(pdf_buffer, pagesize=letter)
         width, height = letter
         
-        pdf_canvas.setFont("Helvetica-Bold", 24)
-        pdf_canvas.drawString(50, height - 50, "SATELLA AI REPORT")
-        
-        pdf_canvas.setFont("Helvetica", 12)
+        c.setFont("Helvetica-Bold", 24)
+        c.drawString(50, height - 50, "SATELLA AI REPORT")
+        c.setFont("Helvetica", 12)
         y = height - 100
         
-        pdf_canvas.drawString(50, y, f"Location: {st.session_state.lat:.4f}, {st.session_state.lon:.4f}")
+        c.drawString(50, y, f"Location: {st.session_state.lat:.4f}, {st.session_state.lon:.4f}")
         y -= 25
-        pdf_canvas.drawString(50, y, f"Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        c.drawString(50, y, f"Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         y -= 25
-        pdf_canvas.drawString(50, y, "Detections: 1")
+        c.drawString(50, y, "Detections: 1 | Confidence: 92.4%")
         y -= 25
-        pdf_canvas.drawString(50, y, "Confidence: 92.4%")
-        y -= 25
-        pdf_canvas.drawString(50, y, "Status: COMPLETE")
+        c.drawString(50, y, "Status: COMPLETE")
         
-        pdf_canvas.save()
-        pdf_data = pdf_buffer.getvalue()
+        c.save()
+        pdf_buffer.seek(0)
         
         st.download_button(
             label="⬇ Download Report",
-            data=pdf_data,
+            data=pdf_buffer.getvalue(),
             file_name=f"SATELLA_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
             mime="application/pdf",
             use_container_width=True
