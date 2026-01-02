@@ -27,7 +27,8 @@ st.markdown("""
     html, body, [data-testid="stAppViewContainer"] {
         background-color: #0a0e1a !important;
         color: #d0d8e0;
-        font-size: 14px !important;
+        font-size: 16px !important;
+        line-height: 1.6 !important;
     }
     
     [data-testid="stSidebar"] {
@@ -36,7 +37,7 @@ st.markdown("""
     }
     
     [data-testid="stSidebar"] * {
-        font-size: 13px !important;
+        font-size: 15px !important;
     }
     
     input {
