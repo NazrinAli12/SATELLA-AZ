@@ -3,6 +3,7 @@ import folium
 from streamlit_folium import folium_static
 from datetime import datetime
 from fpdf import FPDF
+from PIL import Image
 
 st.set_page_config(page_title="SATELLA", layout="wide", initial_sidebar_state="expanded")
 
@@ -45,8 +46,8 @@ st.markdown("""
         border: 1px solid #1a4d6d !important;
         color: #d0d8e0 !important;
         border-radius: 4px !important;
-        padding: 10px 12px !important;
-        font-size: 13px !important;
+        padding: 12px 14px !important;
+        font-size: 15px !important;
         font-family: 'Segoe UI', sans-serif !important;
     }
     
@@ -61,8 +62,8 @@ st.markdown("""
         color: #00d4ff !important;
         border: 1px solid #1a7a9f !important;
         border-radius: 4px !important;
-        padding: 11px 16px !important;
-        font-size: 12px !important;
+        padding: 13px 18px !important;
+        font-size: 14px !important;
         font-weight: 600 !important;
         letter-spacing: 0.5px !important;
         text-transform: uppercase !important;
@@ -106,7 +107,7 @@ st.markdown("""
     
     .section-label {
         color: #00d4ff;
-        font-size: 11px;
+        font-size: 12px;
         text-transform: uppercase;
         letter-spacing: 1.2px;
         font-weight: 700;
@@ -116,14 +117,14 @@ st.markdown("""
     .info-box {
         background: #051a2e;
         border: 1px solid #1a4d6d;
-        padding: 13px;
+        padding: 15px;
         border-radius: 4px;
         margin-bottom: 12px;
     }
     
     .info-box-label {
         color: #7a8fa0;
-        font-size: 10px;
+        font-size: 11px;
         text-transform: uppercase;
         letter-spacing: 0.8px;
         margin: 0;
@@ -132,7 +133,7 @@ st.markdown("""
     
     .info-box-value {
         color: #e0e0e0;
-        font-size: 13px;
+        font-size: 15px;
         margin: 5px 0 0 0;
         font-weight: 600;
     }
@@ -284,7 +285,7 @@ with col_panel:
         pdf.set_font("Arial", '', 10)
         pdf.cell(0, 8, f"Location: {st.session_state.lat}, {st.session_state.lon}", ln=True)
         pdf.cell(0, 8, f"Time: {datetime.now().strftime('%Y-%m-%d %H:%M')}", ln=True)
-        pdf_data = pdf.output(dest='S').encode('latin-1', 'ignore')
+        pdf_data = pdf.output()
         
         st.download_button(
             label="⬇ Download Report",
@@ -303,16 +304,34 @@ with col_panel:
     if st.session_state.t0 and st.session_state.t1:
         img_col1, img_col2 = st.columns(2, gap="small")
         
+        # Normalize image sizes
+        from PIL import Image
+        import io
+        
+        img1 = Image.open(st.session_state.t0)
+        img2 = Image.open(st.session_state.t1)
+        
+        # Resize to same size
+        size = (300, 300)
+        img1_resized = img1.resize(size, Image.Resampling.LANCZOS)
+        img2_resized = img2.resize(size, Image.Resampling.LANCZOS)
+        
         with img_col1:
             st.markdown('<p style="color: #00d4ff; font-size: 10px; text-align: center; margin: 6px 0 8px 0; text-transform: uppercase; font-weight: 600; letter-spacing: 0.8px;">REF: 2024</p>', unsafe_allow_html=True)
-            st.image(st.session_state.t0, use_container_width=True)
+            st.image(img1_resized, use_container_width=True)
         
         with img_col2:
             st.markdown('<p style="color: #00d4ff; font-size: 10px; text-align: center; margin: 6px 0 8px 0; text-transform: uppercase; font-weight: 600; letter-spacing: 0.8px;">TARGET: 2025</p>', unsafe_allow_html=True)
-            st.image(st.session_state.t1, use_container_width=True)
+            st.image(img2_resized, use_container_width=True)
     elif st.session_state.t0:
+        from PIL import Image
+        img1 = Image.open(st.session_state.t0)
+        img1_resized = img1.resize((300, 300), Image.Resampling.LANCZOS)
         st.markdown('<p style="color: #00d4ff; font-size: 10px; text-align: center; margin: 6px 0 8px 0; text-transform: uppercase; font-weight: 600;">REF: 2024</p>', unsafe_allow_html=True)
-        st.image(st.session_state.t0, use_container_width=True)
+        st.image(img1_resized, use_container_width=True)
     elif st.session_state.t1:
+        from PIL import Image
+        img2 = Image.open(st.session_state.t1)
+        img2_resized = img2.resize((300, 300), Image.Resampling.LANCZOS)
         st.markdown('<p style="color: #00d4ff; font-size: 10px; text-align: center; margin: 6px 0 8px 0; text-transform: uppercase; font-weight: 600;">TARGET: 2025</p>', unsafe_allow_html=True)
-        st.image(st.session_state.t1, use_container_width=True)
+        st.image(img2_resized, use_container_width=True)
