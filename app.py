@@ -156,6 +156,48 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+def create_pdf_report(lat, lon, is_analysed):
+    """Create PDF report using ReportLab"""
+    pdf_buffer = io.BytesIO()
+    pdf_canvas = canvas.Canvas(pdf_buffer, pagesize=letter)
+    width, height = letter
+    
+    pdf_canvas.setFont("Helvetica-Bold", 24)
+    pdf_canvas.drawString(50, height - 50, "SATELLA AI REPORT")
+    
+    pdf_canvas.setFont("Helvetica", 12)
+    y_position = height - 100
+    
+    pdf_canvas.drawString(50, y_position, f"Location: {lat:.4f}, {lon:.4f}")
+    y_position -= 25
+    
+    pdf_canvas.drawString(50, y_position, f"Analysis Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    y_position -= 25
+    
+    pdf_canvas.drawString(50, y_position, "Structural Detections: 1")
+    y_position -= 25
+    
+    pdf_canvas.drawString(50, y_position, "AI Confidence: 92.4%")
+    y_position -= 25
+    
+    pdf_canvas.drawString(50, y_position, "Status: ANALYSIS COMPLETE")
+    y_position -= 40
+    
+    pdf_canvas.setFont("Helvetica-Bold", 12)
+    pdf_canvas.drawString(50, y_position, "Project Details")
+    y_position -= 25
+    
+    pdf_canvas.setFont("Helvetica", 11)
+    pdf_canvas.drawString(50, y_position, "Project: Baku Urban Expansion")
+    y_position -= 20
+    pdf_canvas.drawString(50, y_position, "ID: AZ-BU-2025-09")
+    y_position -= 20
+    pdf_canvas.drawString(50, y_position, "Platform: SATELLA GEO-INTELLIGENCE")
+    
+    pdf_canvas.save()
+    pdf_buffer.seek(0)
+    return pdf_buffer.getvalue()
+
 # SIDEBAR
 with st.sidebar:
     st.markdown("""
@@ -291,37 +333,14 @@ with col_panel:
     """, unsafe_allow_html=True)
     
     if st.session_state.is_analysed:
-        try:
-            pdf_buffer = io.BytesIO()
-            pdf_canvas = canvas.Canvas(pdf_buffer, pagesize=letter)
-            
-            pdf_canvas.setFont("Helvetica-Bold", 20)
-            pdf_canvas.drawString(100, 750, "SATELLA AI REPORT")
-            
-            pdf_canvas.setFont("Helvetica", 12)
-            pdf_canvas.drawString(100, 720, f"Location: {st.session_state.lat:.4f}, {st.session_state.lon:.4f}")
-            pdf_canvas.drawString(100, 700, f"Analysis Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-            pdf_canvas.drawString(100, 680, "Structural Detections: 1")
-            pdf_canvas.drawString(100, 660, "AI Confidence: 92.4%")
-            pdf_canvas.drawString(100, 640, "Status: ANALYSIS COMPLETE")
-            
-            pdf_canvas.setFont("Helvetica", 10)
-            pdf_canvas.drawString(100, 600, "Project: Baku Urban Expansion")
-            pdf_canvas.drawString(100, 580, "ID: AZ-BU-2025-09")
-            
-            pdf_canvas.save()
-            pdf_buffer.seek(0)
-            pdf_data = pdf_buffer.getvalue()
-            
-            st.download_button(
-                label="⬇ Download Report",
-                data=pdf_data,
-                file_name=f"SATELLA_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
-                mime="application/pdf",
-                use_container_width=True
-            )
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
+        pdf_data = create_pdf_report(st.session_state.lat, st.session_state.lon, st.session_state.is_analysed)
+        st.download_button(
+            label="⬇ Download Report",
+            data=pdf_data,
+            file_name=f"SATELLA_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
+            mime="application/pdf",
+            use_container_width=True
+        )
     
     st.markdown("""
     <div class="info-box" style="margin-top: 14px; border: 1px solid #d946a6;">
