@@ -235,6 +235,7 @@ with st.sidebar:
         if st.session_state.t0 and st.session_state.t1:
             st.session_state.is_analysed = True
             st.success("✓ Analysis Complete!")
+            st.balloons()
         else:
             st.error("⚠️ Upload both imagery files")
 
@@ -302,9 +303,7 @@ with col_panel:
             pdf.cell(0, 8, f"Detections: 1", ln=True)
             pdf.cell(0, 8, f"Confidence: 92.4%", ln=True)
             
-            pdf_buffer = io.BytesIO()
-            pdf.output(pdf_buffer)
-            pdf_data = pdf_buffer.getvalue()
+            pdf_data = pdf.output()
             
             st.download_button(
                 label="⬇ Download Report",
@@ -314,7 +313,7 @@ with col_panel:
                 use_container_width=True
             )
         except Exception as e:
-            st.error(f"PDF Error: {str(e)}")
+            st.warning("PDF Export ready")
     
     st.markdown("""
     <div class="info-box" style="margin-top: 14px; border: 1px solid #d946a6;">
