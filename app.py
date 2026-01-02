@@ -2,8 +2,9 @@ import streamlit as st
 import folium
 from streamlit_folium import folium_static
 from datetime import datetime
-from fpdf import FPDF
 from PIL import Image
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
 import io
 
 st.set_page_config(page_title="SATELLA", layout="wide", initial_sidebar_state="expanded")
@@ -234,7 +235,6 @@ with st.sidebar:
     if st.button("▶ INITIALIZE AI ANALYSIS", use_container_width=True, key="analyze_btn"):
         if st.session_state.t0 and st.session_state.t1:
             st.session_state.is_analysed = True
-            st.success("✓ Analysis Complete!")
             st.balloons()
         else:
             st.error("⚠️ Upload both imagery files")
@@ -292,18 +292,26 @@ with col_panel:
     
     if st.session_state.is_analysed:
         try:
-            pdf = FPDF(orientation='P', unit='mm', format='A4')
-            pdf.add_page()
-            pdf.set_font("Helvetica", 'B', 16)
-            pdf.cell(0, 10, "SATELLA AI REPORT", ln=True, align='C')
-            pdf.set_font("Helvetica", '', 11)
-            pdf.ln(5)
-            pdf.cell(0, 8, f"Location: {st.session_state.lat:.4f}, {st.session_state.lon:.4f}", ln=True)
-            pdf.cell(0, 8, f"Analysis Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", ln=True)
-            pdf.cell(0, 8, f"Detections: 1", ln=True)
-            pdf.cell(0, 8, f"Confidence: 92.4%", ln=True)
+            pdf_buffer = io.BytesIO()
+            pdf_canvas = canvas.Canvas(pdf_buffer, pagesize=letter)
             
-            pdf_data = pdf.output()
+            pdf_canvas.setFont("Helvetica-Bold", 20)
+            pdf_canvas.drawString(100, 750, "SATELLA AI REPORT")
+            
+            pdf_canvas.setFont("Helvetica", 12)
+            pdf_canvas.drawString(100, 720, f"Location: {st.session_state.lat:.4f}, {st.session_state.lon:.4f}")
+            pdf_canvas.drawString(100, 700, f"Analysis Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+            pdf_canvas.drawString(100, 680, "Structural Detections: 1")
+            pdf_canvas.drawString(100, 660, "AI Confidence: 92.4%")
+            pdf_canvas.drawString(100, 640, "Status: ANALYSIS COMPLETE")
+            
+            pdf_canvas.setFont("Helvetica", 10)
+            pdf_canvas.drawString(100, 600, "Project: Baku Urban Expansion")
+            pdf_canvas.drawString(100, 580, "ID: AZ-BU-2025-09")
+            
+            pdf_canvas.save()
+            pdf_buffer.seek(0)
+            pdf_data = pdf_buffer.getvalue()
             
             st.download_button(
                 label="⬇ Download Report",
@@ -313,7 +321,7 @@ with col_panel:
                 use_container_width=True
             )
         except Exception as e:
-            st.warning("PDF Export ready")
+            st.error(f"Error: {str(e)}")
     
     st.markdown("""
     <div class="info-box" style="margin-top: 14px; border: 1px solid #d946a6;">
