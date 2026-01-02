@@ -222,9 +222,8 @@ with st.sidebar:
     if st.button("▶ INITIALIZE AI ANALYSIS", use_container_width=True, key="analyze_btn"):
         if st.session_state.t0 and st.session_state.t1:
             st.session_state.is_analysed = True
-            st.balloons()
             st.success("✓ Analysis complete!")
-            st.rerun()
+            st.balloons()
 
 # MAIN CONTENT
 col_search = st.columns(1)[0]
@@ -285,15 +284,18 @@ with col_panel:
         pdf.set_font("Arial", '', 10)
         pdf.cell(0, 8, f"Location: {st.session_state.lat}, {st.session_state.lon}", ln=True)
         pdf.cell(0, 8, f"Time: {datetime.now().strftime('%Y-%m-%d %H:%M')}", ln=True)
-        pdf_data = pdf.output()
         
-        st.download_button(
-            label="⬇ Download Report",
-            data=pdf_data,
-            file_name=f"SATELLA_{datetime.now().strftime('%Y%m%d')}.pdf",
-            mime="application/pdf",
-            use_container_width=True
-        )
+        try:
+            pdf_data = pdf.output()
+            st.download_button(
+                label="⬇ Download Report",
+                data=pdf_data,
+                file_name=f"SATELLA_{datetime.now().strftime('%Y%m%d')}.pdf",
+                mime="application/pdf",
+                use_container_width=True
+            )
+        except Exception as e:
+            st.error(f"PDF generation error: {str(e)}")
     
     st.markdown("""
     <div class="info-box" style="margin-top: 14px; border: 1px solid #d946a6;">
@@ -304,17 +306,16 @@ with col_panel:
     if st.session_state.t0 and st.session_state.t1:
         img_col1, img_col2 = st.columns(2, gap="small")
         
-        # Normalize image sizes
-        from PIL import Image
-        import io
-        
         img1 = Image.open(st.session_state.t0)
         img2 = Image.open(st.session_state.t1)
         
-        # Resize to same size
-        size = (300, 300)
-        img1_resized = img1.resize(size, Image.Resampling.LANCZOS)
-        img2_resized = img2.resize(size, Image.Resampling.LANCZOS)
+        # Get aspect ratio from first image and apply to both
+        aspect_ratio = img1.height / img1.width
+        target_width = 280
+        target_height = int(target_width * aspect_ratio)
+        
+        img1_resized = img1.resize((target_width, target_height), Image.Resampling.LANCZOS)
+        img2_resized = img2.resize((target_width, target_height), Image.Resampling.LANCZOS)
         
         with img_col1:
             st.markdown('<p style="color: #00d4ff; font-size: 10px; text-align: center; margin: 6px 0 8px 0; text-transform: uppercase; font-weight: 600; letter-spacing: 0.8px;">REF: 2024</p>', unsafe_allow_html=True)
@@ -324,14 +325,18 @@ with col_panel:
             st.markdown('<p style="color: #00d4ff; font-size: 10px; text-align: center; margin: 6px 0 8px 0; text-transform: uppercase; font-weight: 600; letter-spacing: 0.8px;">TARGET: 2025</p>', unsafe_allow_html=True)
             st.image(img2_resized, use_container_width=True)
     elif st.session_state.t0:
-        from PIL import Image
         img1 = Image.open(st.session_state.t0)
-        img1_resized = img1.resize((300, 300), Image.Resampling.LANCZOS)
+        aspect_ratio = img1.height / img1.width
+        target_width = 280
+        target_height = int(target_width * aspect_ratio)
+        img1_resized = img1.resize((target_width, target_height), Image.Resampling.LANCZOS)
         st.markdown('<p style="color: #00d4ff; font-size: 10px; text-align: center; margin: 6px 0 8px 0; text-transform: uppercase; font-weight: 600;">REF: 2024</p>', unsafe_allow_html=True)
         st.image(img1_resized, use_container_width=True)
     elif st.session_state.t1:
-        from PIL import Image
         img2 = Image.open(st.session_state.t1)
-        img2_resized = img2.resize((300, 300), Image.Resampling.LANCZOS)
+        aspect_ratio = img2.height / img2.width
+        target_width = 280
+        target_height = int(target_width * aspect_ratio)
+        img2_resized = img2.resize((target_width, target_height), Image.Resampling.LANCZOS)
         st.markdown('<p style="color: #00d4ff; font-size: 10px; text-align: center; margin: 6px 0 8px 0; text-transform: uppercase; font-weight: 600;">TARGET: 2025</p>', unsafe_allow_html=True)
         st.image(img2_resized, use_container_width=True)
