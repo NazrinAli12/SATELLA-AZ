@@ -4,8 +4,12 @@ from streamlit_folium import folium_static
 from datetime import datetime
 from PIL import Image
 import io
-from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
+from reportlab.lib import colors
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
+from reportlab.lib.enums import TA_CENTER, TA_LEFT
 
 st.set_page_config(page_title="SATELLA", layout="wide", initial_sidebar_state="expanded")
 
@@ -85,210 +89,241 @@ st.markdown("""
 
 def generate_professional_pdf(lat, lon, is_analysed):
     """Generate professional government-style PDF report"""
-    pdf_buffer = io.BytesIO()
-    c = canvas.Canvas(pdf_buffer, pagesize=letter)
-    width, height = letter
+    from reportlab.lib import colors
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.units import inch
+    from reportlab.lib.enums import TA_CENTER, TA_LEFT
     
-    # Colors (RGB normalized)
-    dark_text = (0.1, 0.1, 0.1)
-    gray_text = (0.4, 0.4, 0.4)
-    light_gray = (0.6, 0.6, 0.6)
-    green_success = (0.18, 0.48, 0.18)
+    pdf_buffer = io.BytesIO()
+    doc = SimpleDocTemplate(pdf_buffer, pagesize=letter, topMargin=0.5*inch, bottomMargin=0.5*inch)
+    story = []
+    styles = getSampleStyleSheet()
+    
+    # Custom styles
+    header_style = ParagraphStyle(
+        'CustomHeader',
+        parent=styles['Heading1'],
+        fontSize=28,
+        textColor=colors.HexColor('#1a1a1a'),
+        spaceAfter=6,
+        alignment=TA_LEFT,
+        fontName='Helvetica-Bold'
+    )
+    
+    subheader_style = ParagraphStyle(
+        'CustomSubHeader',
+        parent=styles['Normal'],
+        fontSize=10,
+        textColor=colors.HexColor('#555555'),
+        spaceAfter=20,
+        alignment=TA_LEFT,
+        fontName='Helvetica',
+        letterSpacing=1.5
+    )
+    
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading2'],
+        fontSize=18,
+        textColor=colors.HexColor('#1a1a1a'),
+        alignment=TA_CENTER,
+        spaceAfter=2,
+        fontName='Helvetica-Bold'
+    )
+    
+    section_style = ParagraphStyle(
+        'SectionTitle',
+        parent=styles['Heading3'],
+        fontSize=10,
+        textColor=colors.HexColor('#1a1a1a'),
+        spaceAfter=12,
+        fontName='Helvetica-Bold',
+        textTransform='uppercase',
+        letterSpacing=1
+    )
     
     # Header
-    c.setFont("Helvetica-Bold", 32)
-    c.setFillColorRGB(*dark_text)
-    c.drawString(50, height - 70, "SATELLA")
+    story.append(Paragraph("SATELLA", header_style))
+    story.append(Paragraph("GEOSPATIAL INTELLIGENCE AGENCY", subheader_style))
+    story.append(Spacer(1, 0.2*inch))
     
-    c.setFont("Helvetica", 12)
-    c.setFillColorRGB(*gray_text)
-    c.drawString(50, height - 90, "GEOSPATIAL INTELLIGENCE AGENCY")
-    
-    # Line separator
-    c.setLineWidth(3)
-    c.setStrokeColorRGB(*dark_text)
-    c.line(50, height - 105, width - 50, height - 105)
-    
-    # Document Title
-    c.setFont("Helvetica-Bold", 24)
-    c.setFillColorRGB(*dark_text)
-    c.drawString(150, height - 150, "INTELLIGENCE ANALYSIS REPORT")
-    
-    c.setFont("Helvetica", 10)
-    c.setFillColorRGB(*gray_text)
-    c.drawString(200, height - 170, "Classification: OFFICIAL")
-    
-    y = height - 220
+    # Title
+    story.append(Paragraph("INTELLIGENCE ANALYSIS REPORT", title_style))
+    story.append(Paragraph("Classification: OFFICIAL", styles['Normal']))
+    story.append(Spacer(1, 0.25*inch))
     
     # Meta Information
-    c.setFont("Helvetica-Bold", 10)
-    c.setFillColorRGB(*light_gray)
-    c.drawString(50, y, "REPORT GENERATED")
-    y -= 15
-    c.setFont("Helvetica", 11)
-    c.setFillColorRGB(*dark_text)
-    c.drawString(50, y, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-    
-    y -= 25
-    c.setFont("Helvetica-Bold", 10)
-    c.setFillColorRGB(*light_gray)
-    c.drawString(50, y, "REPORT ID")
-    y -= 15
-    c.setFont("Helvetica", 10)
-    c.setFillColorRGB(*dark_text)
-    report_id = f"SATELLA_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-    c.drawString(50, y, report_id)
-    
-    y -= 40
+    meta_data = [
+        ['REPORT GENERATED', 'REPORT ID'],
+        [datetime.now().strftime('%Y-%m-%d %H:%M:%S'), f"SATELLA_{datetime.now().strftime('%Y%m%d_%H%M%S')}"]
+    ]
+    meta_table = Table(meta_data, colWidths=[3*inch, 3*inch])
+    meta_table.setStyle(TableStyle([
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 9),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor('#888888')),
+        ('FONTNAME', (0, 1), (-1, 1), 'Helvetica'),
+        ('FONTSIZE', (0, 1), (-1, 1), 11),
+        ('TEXTCOLOR', (0, 1), (-1, 1), colors.HexColor('#1a1a1a')),
+        ('BOTTOMBORDER', (0, 0), (-1, -1), 0.5, colors.HexColor('#e0e0e0')),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+    ]))
+    story.append(meta_table)
+    story.append(Spacer(1, 0.25*inch))
     
     # Section 1: Project Details
-    c.setFont("Helvetica-Bold", 11)
-    c.setFillColorRGB(*dark_text)
-    c.drawString(50, y, "1. PROJECT DETAILS")
-    y -= 15
-    c.setLineWidth(2)
-    c.setStrokeColorRGB(*dark_text)
-    c.line(50, y, width - 50, y)
-    y -= 25
-    
-    c.setFont("Helvetica", 10)
-    c.setFillColorRGB(*gray_text)
-    c.drawString(60, y, "Project Name:")
-    c.setFillColorRGB(*dark_text)
-    c.drawString(250, y, "Baku Urban Expansion Initiative")
-    y -= 15
-    
-    c.setFillColorRGB(*gray_text)
-    c.drawString(60, y, "Project ID:")
-    c.setFillColorRGB(*dark_text)
-    c.drawString(250, y, "AZ-BU-2025-09")
-    y -= 15
-    
-    c.setFillColorRGB(*gray_text)
-    c.drawString(60, y, "Analysis Type:")
-    c.setFillColorRGB(*dark_text)
-    c.drawString(250, y, "Change Detection & Urban Monitoring")
-    
-    y -= 40
+    story.append(Paragraph("1. PROJECT DETAILS", section_style))
+    project_data = [
+        ['PROJECT NAME', 'Baku Urban Expansion Initiative'],
+        ['PROJECT ID', 'AZ-BU-2025-09'],
+        ['ANALYSIS TYPE', 'Change Detection & Urban Monitoring']
+    ]
+    project_table = Table(project_data, colWidths=[1.8*inch, 4.2*inch])
+    project_table.setStyle(TableStyle([
+        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 9),
+        ('TEXTCOLOR', (0, 0), (0, -1), colors.HexColor('#666666')),
+        ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
+        ('FONTSIZE', (1, 0), (1, -1), 11),
+        ('TEXTCOLOR', (1, 0), (1, -1), colors.HexColor('#1a1a1a')),
+        ('ROWBACKGROUNDS', (0, 0), (-1, -1), [colors.white, colors.HexColor('#f9f9f9')]),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e0e0e0')),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 10),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 10),
+        ('TOPPADDING', (0, 0), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+    ]))
+    story.append(project_table)
+    story.append(Spacer(1, 0.2*inch))
     
     # Section 2: Target Area
-    c.setFont("Helvetica-Bold", 11)
-    c.setFillColorRGB(*dark_text)
-    c.drawString(50, y, "2. TARGET AREA")
-    y -= 15
-    c.setLineWidth(2)
-    c.setStrokeColorRGB(*dark_text)
-    c.line(50, y, width - 50, y)
-    y -= 25
-    
-    c.setFont("Helvetica", 10)
-    c.setFillColorRGB(*gray_text)
-    c.drawString(60, y, "Latitude:")
-    c.setFillColorRGB(*dark_text)
-    c.drawString(250, y, f"{lat:.6f}°")
-    y -= 15
-    
-    c.setFillColorRGB(*gray_text)
-    c.drawString(60, y, "Longitude:")
-    c.setFillColorRGB(*dark_text)
-    c.drawString(250, y, f"{lon:.6f}°")
-    y -= 15
-    
-    c.setFillColorRGB(*gray_text)
-    c.drawString(60, y, "Data Source:")
-    c.setFillColorRGB(*dark_text)
-    c.drawString(250, y, "Sentinel-2 L2A Multispectral Imagery")
-    
-    y -= 40
+    story.append(Paragraph("2. TARGET AREA", section_style))
+    target_data = [
+        ['LATITUDE', f"{lat:.6f}°"],
+        ['LONGITUDE', f"{lon:.6f}°"],
+        ['DATA SOURCE', 'Sentinel-2 L2A Multispectral Imagery']
+    ]
+    target_table = Table(target_data, colWidths=[1.8*inch, 4.2*inch])
+    target_table.setStyle(TableStyle([
+        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 9),
+        ('TEXTCOLOR', (0, 0), (0, -1), colors.HexColor('#666666')),
+        ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
+        ('FONTSIZE', (1, 0), (1, -1), 11),
+        ('TEXTCOLOR', (1, 0), (1, -1), colors.HexColor('#1a1a1a')),
+        ('ROWBACKGROUNDS', (0, 0), (-1, -1), [colors.white, colors.HexColor('#f9f9f9')]),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e0e0e0')),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 10),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 10),
+        ('TOPPADDING', (0, 0), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+    ]))
+    story.append(target_table)
+    story.append(Spacer(1, 0.2*inch))
     
     # Section 3: Analysis Findings
-    c.setFont("Helvetica-Bold", 11)
-    c.setFillColorRGB(*dark_text)
-    c.drawString(50, y, "3. ANALYSIS FINDINGS")
-    y -= 15
-    c.setLineWidth(2)
-    c.setStrokeColorRGB(*dark_text)
-    c.line(50, y, width - 50, y)
-    y -= 25
+    story.append(Paragraph("3. ANALYSIS FINDINGS", section_style))
+    findings_data = [
+        ['STRUCTURAL DETECTIONS', 'CONFIDENCE SCORE'],
+        ['1', '92.4%']
+    ]
+    findings_table = Table(findings_data, colWidths=[3*inch, 3*inch])
+    findings_table.setStyle(TableStyle([
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 9),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor('#888888')),
+        ('FONTNAME', (0, 1), (-1, 1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 1), (-1, 1), 16),
+        ('TEXTCOLOR', (0, 1), (0, 1), colors.HexColor('#1a1a1a')),
+        ('TEXTCOLOR', (1, 1), (1, 1), colors.HexColor('#2d7a2d')),
+        ('BACKGROUND', (0, 0), (-1, 1), colors.HexColor('#f5f5f5')),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e0e0e0')),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('ALIGNMENT', (0, 0), (-1, -1), 'CENTER'),
+        ('TOPPADDING', (0, 0), (-1, -1), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+    ]))
+    story.append(findings_table)
+    story.append(Spacer(1, 0.15*inch))
     
-    # Stats Box
-    c.setFont("Helvetica-Bold", 10)
-    c.setFillColorRGB(*light_gray)
-    c.drawString(60, y, "Structural Detections:")
-    c.setFillColorRGB(*dark_text)
-    c.setFont("Helvetica-Bold", 18)
-    c.drawString(280, y - 3, "1")
-    y -= 25
-    
-    c.setFont("Helvetica-Bold", 10)
-    c.setFillColorRGB(*light_gray)
-    c.drawString(60, y, "Confidence Score:")
-    c.setFillColorRGB(*green_success)
-    c.setFont("Helvetica-Bold", 18)
-    c.drawString(280, y - 3, "92.4%")
-    y -= 30
-    
-    c.setFont("Helvetica", 10)
-    c.setFillColorRGB(*gray_text)
-    c.drawString(60, y, "Detection Type:")
-    c.setFillColorRGB(*dark_text)
-    c.drawString(250, y, "Urban Development Pattern")
-    y -= 15
-    
-    c.setFillColorRGB(*gray_text)
-    c.drawString(60, y, "Change Status:")
-    c.setFillColorRGB(*green_success)
-    c.drawString(250, y, "POSITIVE CHANGE DETECTED")
-    y -= 15
-    
-    c.setFillColorRGB(*gray_text)
-    c.drawString(60, y, "Recommendation:")
-    c.setFillColorRGB(*dark_text)
-    c.drawString(250, y, "Further investigation recommended")
-    
-    y -= 40
+    details_data = [
+        ['DETECTION TYPE', 'Urban Development Pattern'],
+        ['CHANGE STATUS', 'POSITIVE CHANGE DETECTED'],
+        ['RECOMMENDATION', 'Further investigation recommended']
+    ]
+    details_table = Table(details_data, colWidths=[1.8*inch, 4.2*inch])
+    details_table.setStyle(TableStyle([
+        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 9),
+        ('TEXTCOLOR', (0, 0), (0, -1), colors.HexColor('#666666')),
+        ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
+        ('FONTSIZE', (1, 0), (1, -1), 11),
+        ('TEXTCOLOR', (1, 0), (1, 1), colors.HexColor('#1a1a1a')),
+        ('TEXTCOLOR', (1, 2), (1, 2), colors.HexColor('#2d7a2d')),
+        ('ROWBACKGROUNDS', (0, 0), (-1, -1), [colors.white, colors.HexColor('#f9f9f9')]),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e0e0e0')),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 10),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 10),
+        ('TOPPADDING', (0, 0), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+    ]))
+    story.append(details_table)
+    story.append(Spacer(1, 0.2*inch))
     
     # Section 4: System Status
-    c.setFont("Helvetica-Bold", 11)
-    c.setFillColorRGB(*dark_text)
-    c.drawString(50, y, "4. SYSTEM STATUS")
-    y -= 15
-    c.setLineWidth(2)
-    c.setStrokeColorRGB(*dark_text)
-    c.line(50, y, width - 50, y)
-    y -= 25
+    story.append(Paragraph("4. SYSTEM STATUS", section_style))
+    status_style = ParagraphStyle(
+        'Status',
+        parent=styles['Normal'],
+        fontSize=11,
+        textColor=colors.HexColor('#2d7a2d'),
+        fontName='Helvetica-Bold'
+    )
+    story.append(Paragraph("✓ ANALYSIS COMPLETE", status_style))
+    story.append(Spacer(1, 0.12*inch))
     
-    c.setFont("Helvetica-Bold", 11)
-    c.setFillColorRGB(*green_success)
-    c.drawString(60, y, "✓ ANALYSIS COMPLETE")
-    y -= 20
-    
-    c.setFont("Helvetica", 10)
-    c.setFillColorRGB(*gray_text)
-    c.drawString(60, y, "System Status:")
-    c.setFillColorRGB(*dark_text)
-    c.drawString(250, y, "OPERATIONAL")
-    y -= 15
-    
-    c.setFillColorRGB(*gray_text)
-    c.drawString(60, y, "Data Quality:")
-    c.setFillColorRGB(*dark_text)
-    c.drawString(250, y, "OPTIMAL")
-    y -= 15
-    
-    c.setFillColorRGB(*gray_text)
-    c.drawString(60, y, "Processing Time:")
-    c.setFillColorRGB(*dark_text)
-    c.drawString(250, y, "2.4 seconds")
+    status_data = [
+        ['SYSTEM STATUS', 'OPERATIONAL'],
+        ['DATA QUALITY', 'OPTIMAL'],
+        ['PROCESSING TIME', '2.4 seconds']
+    ]
+    status_table = Table(status_data, colWidths=[1.8*inch, 4.2*inch])
+    status_table.setStyle(TableStyle([
+        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 9),
+        ('TEXTCOLOR', (0, 0), (0, -1), colors.HexColor('#666666')),
+        ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
+        ('FONTSIZE', (1, 0), (1, -1), 11),
+        ('TEXTCOLOR', (1, 0), (1, -1), colors.HexColor('#1a1a1a')),
+        ('ROWBACKGROUNDS', (0, 0), (-1, -1), [colors.white, colors.HexColor('#f9f9f9')]),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e0e0e0')),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 10),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 10),
+        ('TOPPADDING', (0, 0), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+    ]))
+    story.append(status_table)
+    story.append(Spacer(1, 0.3*inch))
     
     # Footer
-    c.setFont("Helvetica", 9)
-    c.setFillColorRGB(*light_gray)
-    c.drawString(50, 40, "SATELLA GEOSPATIAL INTELLIGENCE AGENCY")
-    c.drawString(50, 25, "Official Confidential Report")
-    c.drawString(width - 200, 25, "© 2026 SATELLA. All rights reserved.")
+    footer_style = ParagraphStyle(
+        'Footer',
+        parent=styles['Normal'],
+        fontSize=8,
+        textColor=colors.HexColor('#999999'),
+        alignment=TA_CENTER,
+        spaceAfter=3
+    )
+    story.append(Paragraph("SATELLA GEOSPATIAL INTELLIGENCE AGENCY", footer_style))
+    story.append(Paragraph("Official Confidential Report", footer_style))
+    story.append(Paragraph("© 2026 SATELLA. All rights reserved.", footer_style))
     
-    c.save()
+    doc.build(story)
     pdf_buffer.seek(0)
     return pdf_buffer.getvalue()
 
