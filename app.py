@@ -83,6 +83,215 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+def generate_professional_pdf(lat, lon, is_analysed):
+    """Generate professional government-style PDF report"""
+    pdf_buffer = io.BytesIO()
+    c = canvas.Canvas(pdf_buffer, pagesize=letter)
+    width, height = letter
+    
+    # Colors (RGB normalized)
+    dark_text = (0.1, 0.1, 0.1)
+    gray_text = (0.4, 0.4, 0.4)
+    light_gray = (0.6, 0.6, 0.6)
+    green_success = (0.18, 0.48, 0.18)
+    
+    # Header
+    c.setFont("Helvetica-Bold", 32)
+    c.setFillColorRGB(*dark_text)
+    c.drawString(50, height - 70, "SATELLA")
+    
+    c.setFont("Helvetica", 12)
+    c.setFillColorRGB(*gray_text)
+    c.drawString(50, height - 90, "GEOSPATIAL INTELLIGENCE AGENCY")
+    
+    # Line separator
+    c.setLineWidth(3)
+    c.setStrokeColorRGB(*dark_text)
+    c.line(50, height - 105, width - 50, height - 105)
+    
+    # Document Title
+    c.setFont("Helvetica-Bold", 24)
+    c.setFillColorRGB(*dark_text)
+    c.drawString(150, height - 150, "INTELLIGENCE ANALYSIS REPORT")
+    
+    c.setFont("Helvetica", 10)
+    c.setFillColorRGB(*gray_text)
+    c.drawString(200, height - 170, "Classification: OFFICIAL")
+    
+    y = height - 220
+    
+    # Meta Information
+    c.setFont("Helvetica-Bold", 10)
+    c.setFillColorRGB(*light_gray)
+    c.drawString(50, y, "REPORT GENERATED")
+    y -= 15
+    c.setFont("Helvetica", 11)
+    c.setFillColorRGB(*dark_text)
+    c.drawString(50, y, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+    
+    y -= 25
+    c.setFont("Helvetica-Bold", 10)
+    c.setFillColorRGB(*light_gray)
+    c.drawString(50, y, "REPORT ID")
+    y -= 15
+    c.setFont("Helvetica", 10)
+    c.setFillColorRGB(*dark_text)
+    report_id = f"SATELLA_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    c.drawString(50, y, report_id)
+    
+    y -= 40
+    
+    # Section 1: Project Details
+    c.setFont("Helvetica-Bold", 11)
+    c.setFillColorRGB(*dark_text)
+    c.drawString(50, y, "1. PROJECT DETAILS")
+    y -= 15
+    c.setLineWidth(2)
+    c.setStrokeColorRGB(*dark_text)
+    c.line(50, y, width - 50, y)
+    y -= 25
+    
+    c.setFont("Helvetica", 10)
+    c.setFillColorRGB(*gray_text)
+    c.drawString(60, y, "Project Name:")
+    c.setFillColorRGB(*dark_text)
+    c.drawString(250, y, "Baku Urban Expansion Initiative")
+    y -= 15
+    
+    c.setFillColorRGB(*gray_text)
+    c.drawString(60, y, "Project ID:")
+    c.setFillColorRGB(*dark_text)
+    c.drawString(250, y, "AZ-BU-2025-09")
+    y -= 15
+    
+    c.setFillColorRGB(*gray_text)
+    c.drawString(60, y, "Analysis Type:")
+    c.setFillColorRGB(*dark_text)
+    c.drawString(250, y, "Change Detection & Urban Monitoring")
+    
+    y -= 40
+    
+    # Section 2: Target Area
+    c.setFont("Helvetica-Bold", 11)
+    c.setFillColorRGB(*dark_text)
+    c.drawString(50, y, "2. TARGET AREA")
+    y -= 15
+    c.setLineWidth(2)
+    c.setStrokeColorRGB(*dark_text)
+    c.line(50, y, width - 50, y)
+    y -= 25
+    
+    c.setFont("Helvetica", 10)
+    c.setFillColorRGB(*gray_text)
+    c.drawString(60, y, "Latitude:")
+    c.setFillColorRGB(*dark_text)
+    c.drawString(250, y, f"{lat:.6f}°")
+    y -= 15
+    
+    c.setFillColorRGB(*gray_text)
+    c.drawString(60, y, "Longitude:")
+    c.setFillColorRGB(*dark_text)
+    c.drawString(250, y, f"{lon:.6f}°")
+    y -= 15
+    
+    c.setFillColorRGB(*gray_text)
+    c.drawString(60, y, "Data Source:")
+    c.setFillColorRGB(*dark_text)
+    c.drawString(250, y, "Sentinel-2 L2A Multispectral Imagery")
+    
+    y -= 40
+    
+    # Section 3: Analysis Findings
+    c.setFont("Helvetica-Bold", 11)
+    c.setFillColorRGB(*dark_text)
+    c.drawString(50, y, "3. ANALYSIS FINDINGS")
+    y -= 15
+    c.setLineWidth(2)
+    c.setStrokeColorRGB(*dark_text)
+    c.line(50, y, width - 50, y)
+    y -= 25
+    
+    # Stats Box
+    c.setFont("Helvetica-Bold", 10)
+    c.setFillColorRGB(*light_gray)
+    c.drawString(60, y, "Structural Detections:")
+    c.setFillColorRGB(*dark_text)
+    c.setFont("Helvetica-Bold", 18)
+    c.drawString(280, y - 3, "1")
+    y -= 25
+    
+    c.setFont("Helvetica-Bold", 10)
+    c.setFillColorRGB(*light_gray)
+    c.drawString(60, y, "Confidence Score:")
+    c.setFillColorRGB(*green_success)
+    c.setFont("Helvetica-Bold", 18)
+    c.drawString(280, y - 3, "92.4%")
+    y -= 30
+    
+    c.setFont("Helvetica", 10)
+    c.setFillColorRGB(*gray_text)
+    c.drawString(60, y, "Detection Type:")
+    c.setFillColorRGB(*dark_text)
+    c.drawString(250, y, "Urban Development Pattern")
+    y -= 15
+    
+    c.setFillColorRGB(*gray_text)
+    c.drawString(60, y, "Change Status:")
+    c.setFillColorRGB(*green_success)
+    c.drawString(250, y, "POSITIVE CHANGE DETECTED")
+    y -= 15
+    
+    c.setFillColorRGB(*gray_text)
+    c.drawString(60, y, "Recommendation:")
+    c.setFillColorRGB(*dark_text)
+    c.drawString(250, y, "Further investigation recommended")
+    
+    y -= 40
+    
+    # Section 4: System Status
+    c.setFont("Helvetica-Bold", 11)
+    c.setFillColorRGB(*dark_text)
+    c.drawString(50, y, "4. SYSTEM STATUS")
+    y -= 15
+    c.setLineWidth(2)
+    c.setStrokeColorRGB(*dark_text)
+    c.line(50, y, width - 50, y)
+    y -= 25
+    
+    c.setFont("Helvetica-Bold", 11)
+    c.setFillColorRGB(*green_success)
+    c.drawString(60, y, "✓ ANALYSIS COMPLETE")
+    y -= 20
+    
+    c.setFont("Helvetica", 10)
+    c.setFillColorRGB(*gray_text)
+    c.drawString(60, y, "System Status:")
+    c.setFillColorRGB(*dark_text)
+    c.drawString(250, y, "OPERATIONAL")
+    y -= 15
+    
+    c.setFillColorRGB(*gray_text)
+    c.drawString(60, y, "Data Quality:")
+    c.setFillColorRGB(*dark_text)
+    c.drawString(250, y, "OPTIMAL")
+    y -= 15
+    
+    c.setFillColorRGB(*gray_text)
+    c.drawString(60, y, "Processing Time:")
+    c.setFillColorRGB(*dark_text)
+    c.drawString(250, y, "2.4 seconds")
+    
+    # Footer
+    c.setFont("Helvetica", 9)
+    c.setFillColorRGB(*light_gray)
+    c.drawString(50, 40, "SATELLA GEOSPATIAL INTELLIGENCE AGENCY")
+    c.drawString(50, 25, "Official Confidential Report")
+    c.drawString(width - 200, 25, "© 2026 SATELLA. All rights reserved.")
+    
+    c.save()
+    pdf_buffer.seek(0)
+    return pdf_buffer.getvalue()
+
 with st.sidebar:
     st.markdown("""
     <div style="display: flex; gap: 12px; margin-bottom: 28px; padding: 0 8px; align-items: center;">
@@ -198,30 +407,12 @@ with col_panel:
     </div>""", unsafe_allow_html=True)
     
     if st.session_state.is_analysed:
-        pdf_buffer = io.BytesIO()
-        c = canvas.Canvas(pdf_buffer, pagesize=letter)
-        width, height = letter
-        
-        c.setFont("Helvetica-Bold", 24)
-        c.drawString(50, height - 50, "SATELLA AI REPORT")
-        c.setFont("Helvetica", 12)
-        y = height - 100
-        
-        c.drawString(50, y, f"Location: {st.session_state.lat:.4f}, {st.session_state.lon:.4f}")
-        y -= 25
-        c.drawString(50, y, f"Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-        y -= 25
-        c.drawString(50, y, "Detections: 1 | Confidence: 92.4%")
-        y -= 25
-        c.drawString(50, y, "Status: COMPLETE")
-        
-        c.save()
-        pdf_buffer.seek(0)
+        pdf_data = generate_professional_pdf(st.session_state.lat, st.session_state.lon, st.session_state.is_analysed)
         
         st.download_button(
-            label="⬇ Download Report",
-            data=pdf_buffer.getvalue(),
-            file_name=f"SATELLA_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
+            label="⬇ Download Detailed Report",
+            data=pdf_data,
+            file_name=f"SATELLA_REPORT_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
             mime="application/pdf",
             use_container_width=True
         )
