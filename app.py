@@ -60,47 +60,16 @@ st.markdown("""
         font-weight: 600 !important;
     }
     button:hover { background-color: #0f5a7f !important; border-color: #00d4ff !important; }
-    hr { border: none !important; border-top: 1px solid #1a4d6d !important; margin: 18px 0 !important; }
-    .section-label {
-        color: #00d4ff;
-        font-size: 12px;
-        text-transform: uppercase;
-        letter-spacing: 1.2px;
-        font-weight: 700;
-        margin: 18px 0 12px 0;
-    }
-    .info-box {
-        background: #051a2e;
-        border: 1px solid #1a4d6d;
-        padding: 15px;
-        border-radius: 4px;
-        margin-bottom: 12px;
-    }
-    .info-box-label {
-        color: #7a8fa0;
-        font-size: 11px;
-        text-transform: uppercase;
-        letter-spacing: 0.8px;
-        margin: 0;
-        font-weight: 600;
-    }
 </style>
 """, unsafe_allow_html=True)
 
 def generate_professional_pdf(lat, lon, is_analysed):
     """Generate professional government-style PDF report"""
-    from reportlab.lib import colors
-    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
-    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-    from reportlab.lib.units import inch
-    from reportlab.lib.enums import TA_CENTER, TA_LEFT
-    
     pdf_buffer = io.BytesIO()
     doc = SimpleDocTemplate(pdf_buffer, pagesize=letter, topMargin=0.5*inch, bottomMargin=0.5*inch)
     story = []
     styles = getSampleStyleSheet()
     
-    # Custom styles
     header_style = ParagraphStyle(
         'CustomHeader',
         parent=styles['Heading1'],
@@ -143,17 +112,14 @@ def generate_professional_pdf(lat, lon, is_analysed):
         letterSpacing=1
     )
     
-    # Header
     story.append(Paragraph("SATELLA", header_style))
     story.append(Paragraph("GEOSPATIAL INTELLIGENCE AGENCY", subheader_style))
     story.append(Spacer(1, 0.2*inch))
     
-    # Title
     story.append(Paragraph("INTELLIGENCE ANALYSIS REPORT", title_style))
     story.append(Paragraph("Classification: OFFICIAL", styles['Normal']))
     story.append(Spacer(1, 0.25*inch))
     
-    # Meta Information
     meta_data = [
         ['REPORT GENERATED', 'REPORT ID'],
         [datetime.now().strftime('%Y-%m-%d %H:%M:%S'), f"SATELLA_{datetime.now().strftime('%Y%m%d_%H%M%S')}"]
@@ -172,7 +138,6 @@ def generate_professional_pdf(lat, lon, is_analysed):
     story.append(meta_table)
     story.append(Spacer(1, 0.25*inch))
     
-    # Section 1: Project Details
     story.append(Paragraph("1. PROJECT DETAILS", section_style))
     project_data = [
         ['PROJECT NAME', 'Baku Urban Expansion Initiative'],
@@ -198,7 +163,6 @@ def generate_professional_pdf(lat, lon, is_analysed):
     story.append(project_table)
     story.append(Spacer(1, 0.2*inch))
     
-    # Section 2: Target Area
     story.append(Paragraph("2. TARGET AREA", section_style))
     target_data = [
         ['LATITUDE', f"{lat:.6f}°"],
@@ -224,7 +188,6 @@ def generate_professional_pdf(lat, lon, is_analysed):
     story.append(target_table)
     story.append(Spacer(1, 0.2*inch))
     
-    # Section 3: Analysis Findings
     story.append(Paragraph("3. ANALYSIS FINDINGS", section_style))
     findings_data = [
         ['STRUCTURAL DETECTIONS', 'CONFIDENCE SCORE'],
@@ -274,7 +237,6 @@ def generate_professional_pdf(lat, lon, is_analysed):
     story.append(details_table)
     story.append(Spacer(1, 0.2*inch))
     
-    # Section 4: System Status
     story.append(Paragraph("4. SYSTEM STATUS", section_style))
     status_style = ParagraphStyle(
         'Status',
@@ -310,7 +272,6 @@ def generate_professional_pdf(lat, lon, is_analysed):
     story.append(status_table)
     story.append(Spacer(1, 0.3*inch))
     
-    # Footer
     footer_style = ParagraphStyle(
         'Footer',
         parent=styles['Normal'],
@@ -329,29 +290,29 @@ def generate_professional_pdf(lat, lon, is_analysed):
 
 with st.sidebar:
     st.markdown("""
-    <div style="display: flex; gap: 12px; margin-bottom: 28px; padding: 0 8px; align-items: center;">
-        <div style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #1a5a7a, #0d2b45); border: 1px solid #1a7a9f; border-radius: 4px; color: #00d4ff; font-size: 22px;">🛰️</div>
+    <div style="display: flex; gap: 12px; margin-bottom: 32px; padding: 0 8px; align-items: center;">
+        <div style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #1a5a7a, #0d2b45); border: 1px solid #1a7a9f; border-radius: 5px; color: #00d4ff; font-size: 24px; flex-shrink: 0;">🛰️</div>
         <div style="flex: 1;">
-            <h2 style="color: #e0e0e0; margin: 0; font-size: 17px; letter-spacing: 1.5px; font-weight: 700;">SATELLA</h2>
-            <p style="color: #7a8fa0; font-size: 10px; margin: 4px 0 0 0; font-weight: 500;">GEO-INTELLIGENCE PLATFORM</p>
+            <h2 style="color: #e0e0e0; margin: 0; font-size: 18px; letter-spacing: 1.5px; font-weight: 700;">SATELLA</h2>
+            <p style="color: #7a8fa0; font-size: 11px; margin: 5px 0 0 0; font-weight: 500; letter-spacing: 0.5px;">GEO-INTELLIGENCE PLATFORM</p>
         </div>
-        <span style="background: #00a855; color: white; padding: 5px 9px; border-radius: 3px; font-size: 8px; font-weight: 700;">● LIVE</span>
+        <span style="background: #00a855; color: white; padding: 6px 10px; border-radius: 3px; font-size: 9px; font-weight: 700; letter-spacing: 0.5px; white-space: nowrap;">● LIVE</span>
     </div>
     """, unsafe_allow_html=True)
     
-    st.markdown('<p class="section-label">▶ CURRENT PROJECT</p>', unsafe_allow_html=True)
-    st.markdown("""<div class="info-box">
-        <p style="color: #e0e0e0; font-size: 15px; margin: 5px 0 0 0; font-weight: 600;">Baku Urban Expansion</p>
-        <p style="color: #7a8fa0; font-size: 10px; margin: 5px 0 0 0;">ID: AZ-BU-2025-09</p>
+    st.markdown('<p style="color: #00d4ff; font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; font-weight: 700; margin: 20px 0 14px 0;">▶ CURRENT PROJECT</p>', unsafe_allow_html=True)
+    st.markdown("""<div style="background: #051a2e; border: 1px solid #1a4d6d; padding: 14px; border-radius: 4px; margin-bottom: 22px;">
+        <p style="color: #e0e0e0; font-size: 13px; margin: 0 0 6px 0; font-weight: 600;">Baku Urban Expansion</p>
+        <p style="color: #7a8fa0; font-size: 10px; margin: 0; letter-spacing: 0.5px;">ID: AZ-BU-2025-09</p>
     </div>""", unsafe_allow_html=True)
     
-    st.markdown('<p class="section-label">🎯 TARGET COORDINATES</p>', unsafe_allow_html=True)
+    st.markdown('<p style="color: #00d4ff; font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; font-weight: 700; margin: 20px 0 14px 0;">🎯 TARGET COORDINATES</p>', unsafe_allow_html=True)
     col1, col2 = st.columns(2, gap="small")
     with col1:
-        st.markdown('<p style="font-size: 10px; color: #7a8fa0; text-transform: uppercase; font-weight: 600; margin-bottom: 5px;">Latitude</p>', unsafe_allow_html=True)
+        st.markdown('<p style="font-size: 9px; color: #7a8fa0; text-transform: uppercase; font-weight: 600; margin-bottom: 6px; letter-spacing: 0.5px;">Latitude</p>', unsafe_allow_html=True)
         lat_str = st.text_input("", value=str(st.session_state.lat), label_visibility="collapsed", key="lat_input")
     with col2:
-        st.markdown('<p style="font-size: 10px; color: #7a8fa0; text-transform: uppercase; font-weight: 600; margin-bottom: 5px;">Longitude</p>', unsafe_allow_html=True)
+        st.markdown('<p style="font-size: 9px; color: #7a8fa0; text-transform: uppercase; font-weight: 600; margin-bottom: 6px; letter-spacing: 0.5px;">Longitude</p>', unsafe_allow_html=True)
         lon_str = st.text_input("", value=str(st.session_state.lon), label_visibility="collapsed", key="lon_input")
     
     try:
@@ -366,18 +327,17 @@ with st.sidebar:
     if st.button("🔄 Relocate Scanner", use_container_width=True):
         st.rerun()
     
-    st.markdown("---")
-    st.markdown('<p class="section-label" style="border-left: 2px solid #d946a6; padding-left: 10px;">⚙️ INGEST ENGINE</p>', unsafe_allow_html=True)
+    st.markdown('<p style="color: #00d4ff; font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; font-weight: 700; margin: 22px 0 14px 0; border-left: 2px solid #d946a6; padding-left: 10px;">⚙️ INGEST ENGINE</p>', unsafe_allow_html=True)
     
-    st.markdown("""<div class="info-box" style="border: 1px dashed #1a7a9f;">
-        <p class="info-box-label">📦 Baseline Imagery (T0)</p>
-        <p style="font-size: 9px; color: #7a8fa0; margin: 5px 0 0 0;">Sentinel-2 L2A</p>
+    st.markdown("""<div style="background: #051a2e; border: 1px dashed #1a7a9f; padding: 14px; border-radius: 4px; margin-bottom: 12px;">
+        <p style="color: #e0e0e0; font-size: 11px; font-weight: 600; margin: 0 0 4px 0;">📦 Baseline Imagery (T0)</p>
+        <p style="color: #7a8fa0; font-size: 9px; margin: 0; letter-spacing: 0.5px;">Sentinel-2 L2A</p>
     </div>""", unsafe_allow_html=True)
     t0_file = st.file_uploader("Upload T0", type=["png", "jpg", "jpeg"], label_visibility="collapsed", key="t0_up")
     
-    st.markdown("""<div class="info-box" style="border: 1px dashed #0084d4;">
-        <p class="info-box-label">▶️ Target Imagery (T1)</p>
-        <p style="font-size: 9px; color: #7a8fa0; margin: 5px 0 0 0;">Sentinel-2 L2A</p>
+    st.markdown("""<div style="background: #051a2e; border: 1px dashed #0084d4; padding: 14px; border-radius: 4px; margin-bottom: 12px;">
+        <p style="color: #e0e0e0; font-size: 11px; font-weight: 600; margin: 0 0 4px 0;">▶️ Target Imagery (T1)</p>
+        <p style="color: #7a8fa0; font-size: 9px; margin: 0; letter-spacing: 0.5px;">Sentinel-2 L2A</p>
     </div>""", unsafe_allow_html=True)
     t1_file = st.file_uploader("Upload T1", type=["png", "jpg", "jpeg"], label_visibility="collapsed", key="t1_up")
     
@@ -392,8 +352,6 @@ with st.sidebar:
         img = Image.open(t1_file)
         img.thumbnail((400, 400), Image.Resampling.LANCZOS)
         st.session_state.t1_display = img
-    
-    st.markdown("---")
     
     if st.button("▶ INITIALIZE AI ANALYSIS", use_container_width=True, key="analyze_btn"):
         if st.session_state.t0 and st.session_state.t1:
@@ -421,52 +379,68 @@ with col_map:
     folium_static(m, width=900, height=700)
 
 with col_panel:
-    st.markdown("""<div style="background: #0f1419; border: 1px solid #1a4d6d; padding: 13px; border-radius: 4px; margin-bottom: 14px;">
-        <p style="color: #7a8fa0; font-size: 10px; text-transform: uppercase; margin: 0; font-weight: 600;">🔍 DETECTION LAYER</p>
+    st.markdown("""<div style="background: #0f1419; border: 1px solid #1a4d6d; padding: 15px; border-radius: 4px; margin-bottom: 16px;">
+        <p style="color: #00d4ff; font-size: 11px; text-transform: uppercase; margin: 0; font-weight: 700; letter-spacing: 1px;">🔍 DETECTION LAYER</p>
     </div>""", unsafe_allow_html=True)
     
     detections = "1" if st.session_state.is_analysed else "0"
-    st.markdown(f"""<div class="info-box">
-        <p class="info-box-label">Structural Detections</p>
-        <p style="color: #00d4ff; font-size: 28px; font-weight: 700; margin: 6px 0 0 0;">{detections}</p>
+    st.markdown(f"""<div style="background: #051a2e; border: 1px solid #1a4d6d; padding: 16px; border-radius: 4px; margin-bottom: 14px;">
+        <p style="color: #7a8fa0; font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; margin: 0 0 8px 0; font-weight: 600;">Structural Detections</p>
+        <p style="color: #00d4ff; font-size: 32px; font-weight: 700; margin: 0;">{detections}</p>
     </div>""", unsafe_allow_html=True)
     
     confidence = "92.4" if st.session_state.is_analysed else "0.0"
-    st.markdown(f"""<div class="info-box">
-        <p class="info-box-label">AI Confidence</p>
-        <p style="color: #00ff41; font-size: 28px; font-weight: 700; margin: 6px 0 0 0;">{confidence}%</p>
+    st.markdown(f"""<div style="background: #051a2e; border: 1px solid #1a4d6d; padding: 16px; border-radius: 4px; margin-bottom: 14px;">
+        <p style="color: #7a8fa0; font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; margin: 0 0 8px 0; font-weight: 600;">AI Confidence</p>
+        <p style="color: #00ff41; font-size: 32px; font-weight: 700; margin: 0;">{confidence}%</p>
     </div>""", unsafe_allow_html=True)
     
-    st.markdown("""<div class="info-box">
-        <p class="info-box-label">📥 Export Protocol</p>
+    st.markdown("""<div style="background: #051a2e; border: 1px solid #d946a6; padding: 14px; border-radius: 4px; margin-bottom: 16px;">
+        <p style="color: #d946a6; font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; margin: 0; font-weight: 700;">📥 EXPORT PROTOCOL</p>
     </div>""", unsafe_allow_html=True)
     
     if st.session_state.is_analysed:
         pdf_data = generate_professional_pdf(st.session_state.lat, st.session_state.lon, st.session_state.is_analysed)
-        
         st.download_button(
             label="⬇ Download Detailed Report",
             data=pdf_data,
             file_name=f"SATELLA_REPORT_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
             mime="application/pdf",
-            use_container_width=True
+            use_container_width=True,
+            key="pdf_download"
         )
+    else:
+        st.markdown("""<div style="background: #051a2e; border: 1px solid #1a4d6d; padding: 12px; border-radius: 4px; text-align: center;">
+            <p style="color: #7a8fa0; font-size: 10px; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">Upload images to enable</p>
+        </div>""", unsafe_allow_html=True)
     
-    st.markdown("""<div class="info-box" style="margin-top: 14px; border: 1px solid #d946a6;">
-        <p class="info-box-label" style="color: #d946a6;">📷 IMAGERY FEED</p>
+    st.markdown("""<div style="background: #051a2e; border: 1px solid #d946a6; padding: 14px; border-radius: 4px; margin-top: 18px; margin-bottom: 12px;">
+        <p style="color: #d946a6; font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; margin: 0; font-weight: 700;">📷 IMAGERY FEED</p>
     </div>""", unsafe_allow_html=True)
     
     if st.session_state.t0_display and st.session_state.t1_display:
         img_col1, img_col2 = st.columns(2, gap="small")
         with img_col1:
-            st.markdown('<p style="color: #00d4ff; font-size: 10px; text-align: center; margin: 6px 0 8px 0; text-transform: uppercase; font-weight: 600;">REF: 2024</p>', unsafe_allow_html=True)
+            st.markdown("""<div style="background: #0f1419; border: 1px solid #1a4d6d; padding: 10px; border-radius: 3px; margin-bottom: 8px; text-align: center;">
+                <p style="color: #00d4ff; font-size: 10px; margin: 0; text-transform: uppercase; font-weight: 600; letter-spacing: 0.8px;">REF: 2024</p>
+            </div>""", unsafe_allow_html=True)
             st.image(st.session_state.t0_display, use_container_width=True)
         with img_col2:
-            st.markdown('<p style="color: #00d4ff; font-size: 10px; text-align: center; margin: 6px 0 8px 0; text-transform: uppercase; font-weight: 600;">TARGET: 2025</p>', unsafe_allow_html=True)
+            st.markdown("""<div style="background: #0f1419; border: 1px solid #1a4d6d; padding: 10px; border-radius: 3px; margin-bottom: 8px; text-align: center;">
+                <p style="color: #00d4ff; font-size: 10px; margin: 0; text-transform: uppercase; font-weight: 600; letter-spacing: 0.8px;">TARGET: 2025</p>
+            </div>""", unsafe_allow_html=True)
             st.image(st.session_state.t1_display, use_container_width=True)
     elif st.session_state.t0_display:
-        st.markdown('<p style="color: #00d4ff; font-size: 10px; text-align: center; margin: 6px 0 8px 0; text-transform: uppercase; font-weight: 600;">REF: 2024</p>', unsafe_allow_html=True)
+        st.markdown("""<div style="background: #0f1419; border: 1px solid #1a4d6d; padding: 10px; border-radius: 3px; margin-bottom: 8px; text-align: center;">
+            <p style="color: #00d4ff; font-size: 10px; margin: 0; text-transform: uppercase; font-weight: 600;">REF: 2024</p>
+        </div>""", unsafe_allow_html=True)
         st.image(st.session_state.t0_display, use_container_width=True)
     elif st.session_state.t1_display:
-        st.markdown('<p style="color: #00d4ff; font-size: 10px; text-align: center; margin: 6px 0 8px 0; text-transform: uppercase; font-weight: 600;">TARGET: 2025</p>', unsafe_allow_html=True)
+        st.markdown("""<div style="background: #0f1419; border: 1px solid #1a4d6d; padding: 10px; border-radius: 3px; margin-bottom: 8px; text-align: center;">
+            <p style="color: #00d4ff; font-size: 10px; margin: 0; text-transform: uppercase; font-weight: 600;">TARGET: 2025</p>
+        </div>""", unsafe_allow_html=True)
         st.image(st.session_state.t1_display, use_container_width=True)
+    else:
+        st.markdown("""<div style="background: #051a2e; border: 1px dashed #1a4d6d; padding: 30px 12px; border-radius: 4px; text-align: center;">
+            <p style="color: #7a8fa0; font-size: 11px; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">No imagery uploaded</p>
+        </div>""", unsafe_allow_html=True)
