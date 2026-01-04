@@ -379,8 +379,8 @@ with col_map:
     folium_static(m, width=900, height=700)
 
 with col_panel:
-    st.markdown("""<div style="background: #0f1419; border: 1px solid #1a4d6d; padding: 15px; border-radius: 4px; margin-bottom: 16px;">
-        <p style="color: #00d4ff; font-size: 11px; text-transform: uppercase; margin: 0; font-weight: 700; letter-spacing: 1px;">🔍 DETECTION LAYER</p>
+    st.markdown("""<div style="background: transparent; border: none; padding: 0; margin-bottom: 16px;">
+        <p style="color: #7a8fa0; font-size: 11px; text-transform: uppercase; margin: 0; font-weight: 600; letter-spacing: 1px;">🔍 DETECTION LAYER</p>
     </div>""", unsafe_allow_html=True)
     
     detections = "1" if st.session_state.is_analysed else "0"
@@ -414,7 +414,7 @@ with col_panel:
             <p style="color: #7a8fa0; font-size: 10px; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">Upload images to enable</p>
         </div>""", unsafe_allow_html=True)
     
-    st.markdown("""<div style="background: #051a2e; border: 1px solid #d946a6; padding: 14px; border-radius: 4px; margin-top: 18px; margin-bottom: 12px;">
+    st.markdown("""<div style="background: transparent; border: none; padding: 0; margin-top: 18px; margin-bottom: 12px;">
         <p style="color: #d946a6; font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; margin: 0; font-weight: 700;">📷 IMAGERY FEED</p>
     </div>""", unsafe_allow_html=True)
     
