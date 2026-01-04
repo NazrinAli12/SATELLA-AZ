@@ -290,13 +290,13 @@ def generate_professional_pdf(lat, lon, is_analysed):
 
 with st.sidebar:
     st.markdown("""
-    <div style="display: flex; gap: 12px; margin-bottom: 32px; padding: 0 8px; align-items: center;">
-        <div style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #1a5a7a, #0d2b45); border: 1px solid #1a7a9f; border-radius: 5px; color: #00d4ff; font-size: 24px; flex-shrink: 0;">🛰️</div>
-        <div style="flex: 1;">
-            <h2 style="color: #e0e0e0; margin: 0; font-size: 18px; letter-spacing: 1.5px; font-weight: 700;">SATELLA</h2>
-            <p style="color: #7a8fa0; font-size: 11px; margin: 5px 0 0 0; font-weight: 500; letter-spacing: 0.5px;">GEO-INTELLIGENCE PLATFORM</p>
+    <div style="display: flex; gap: 16px; margin-bottom: 32px; padding: 0; align-items: flex-start;">
+        <div style="width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #1a5a7a, #0d2b45); border: 1px solid #1a7a9f; border-radius: 6px; color: #00d4ff; font-size: 28px; flex-shrink: 0; margin-top: 2px;">🛰️</div>
+        <div style="flex: 1; padding-top: 4px;">
+            <h2 style="color: #e0e0e0; margin: 0 0 2px 0; font-size: 20px; letter-spacing: 1.5px; font-weight: 700;">SATELLA</h2>
+            <p style="color: #7a8fa0; font-size: 12px; margin: 0; font-weight: 500; letter-spacing: 0.5px;">GEO-INTELLIGENCE PLATFORM</p>
         </div>
-        <span style="background: #00a855; color: white; padding: 6px 10px; border-radius: 3px; font-size: 9px; font-weight: 700; letter-spacing: 0.5px; white-space: nowrap;">● LIVE</span>
+        <span style="background: #00a855; color: white; padding: 6px 10px; border-radius: 3px; font-size: 9px; font-weight: 700; letter-spacing: 0.5px; white-space: nowrap; margin-top: 2px;">● LIVE</span>
     </div>
     """, unsafe_allow_html=True)
     
