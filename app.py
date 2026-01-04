@@ -290,13 +290,18 @@ def generate_professional_pdf(lat, lon, is_analysed):
 
 with st.sidebar:
     st.markdown("""
-    <div style="display: flex; gap: 16px; margin-bottom: 32px; padding: 0; align-items: flex-start;">
-        <div style="width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #1a5a7a, #0d2b45); border: 1px solid #1a7a9f; border-radius: 6px; color: #00d4ff; font-size: 28px; flex-shrink: 0; margin-top: 2px;">🛰️</div>
-        <div style="flex: 1; padding-top: 4px;">
-            <h2 style="color: #e0e0e0; margin: 0 0 2px 0; font-size: 20px; letter-spacing: 1.5px; font-weight: 700;">SATELLA</h2>
-            <p style="color: #7a8fa0; font-size: 12px; margin: 0; font-weight: 500; letter-spacing: 0.5px;">GEO-INTELLIGENCE PLATFORM</p>
+    <div style="padding-bottom: 20px; border-bottom: 2px solid #1a4d6d; margin-bottom: 28px;">
+        <div style="display: flex; gap: 16px; align-items: flex-start;">
+            <div style="width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #2a7aaa, #1a5a8a); border: 2px solid #00d4ff; border-radius: 6px; color: #00d4ff; font-size: 30px; flex-shrink: 0;">🛰️</div>
+            <div style="flex: 1; padding-top: 3px;">
+                <h2 style="color: #ffffff; margin: 0 0 3px 0; font-size: 22px; letter-spacing: 2px; font-weight: 700; text-transform: uppercase;">SATELLA</h2>
+                <p style="color: #7a8fa0; font-size: 10px; margin: 0; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase;">Geo-Intelligence Agency</p>
+                <p style="color: #555555; font-size: 9px; margin: 4px 0 0 0; letter-spacing: 0.5px;">Intelligence Platform</p>
+            </div>
         </div>
-        <span style="background: #00a855; color: white; padding: 6px 10px; border-radius: 3px; font-size: 9px; font-weight: 700; letter-spacing: 0.5px; white-space: nowrap; margin-top: 2px;">● LIVE</span>
+        <div style="margin-top: 12px; text-align: right;">
+            <span style="background: #00a855; color: white; padding: 6px 12px; border-radius: 3px; font-size: 9px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase;">● LIVE</span>
+        </div>
     </div>
     """, unsafe_allow_html=True)
     
@@ -362,7 +367,7 @@ with st.sidebar:
 
 col_search = st.columns(1)[0]
 with col_search:
-    st.text_input("🔍 Search coordinates, projects, or inspectors...", placeholder="", label_visibility="collapsed", key="search_input")
+    pass
 
 col_map, col_panel = st.columns([2.8, 1.4], gap="small")
 
